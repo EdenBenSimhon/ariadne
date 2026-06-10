@@ -12,6 +12,6 @@ export class AppController {
 
   @Get('health')
   healthCheck() {
-    return { status: 'ok' };
+    return { status: 'ok', code: 200 };
   }
 }
