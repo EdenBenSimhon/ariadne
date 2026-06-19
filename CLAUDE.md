@@ -4,7 +4,7 @@
 
 **Ariadne** is the codebase for **EventTracer** — transport-agnostic distributed tracing for event-driven and API-based systems. One trace across Kafka, RabbitMQ, and REST, with **zero tracing code in client services**.
 
-**Source of truth:** `/Users/edenbensimhon/Downloads/EventTracer-Specification.pdf` (Unified Architecture & Design Spec, v3.1, June 2026). When in doubt, the spec wins.
+**Source of truth:** [`EventTracer-Specification.md`](./EventTracer-Specification.md) (Unified Architecture & Design Spec, v3.1, June 2026), at the repo root. When in doubt, the spec wins.
 
 ## Stack
 
@@ -28,6 +28,147 @@ libs/
 ```
 
 Planned additions (later phases): `libs/transport-core`, `libs/transport-{kafka,rabbitmq,rest}`, `libs/sdk-nestjs`, `libs/graph`, `apps/agent`, `sdks/python`, `sdks/java`.
+
+## Layered architecture (spec §2)
+
+Four stacked layers plus one cross-cutting Security layer. The **Transport Abstraction
+Layer** is the technical heart — it is what makes "any environment, any language" possible.
+
+```
+LAYER 4 — INTELLIGENCE   AI agent: tool-using LLM, reasons over the distilled graph (reads via the API).
+LAYER 3 — SYSTEM         EventTracer platform: Collector → PostgreSQL → REST API → Angular UI.
+LAYER 2 — TRANSPORT ★    The core. One Transport port + BaseTransport; adapters: Kafka · RabbitMQ · REST.
+LAYER 1 — PROTOCOL       Transport- and language-neutral contract: the Envelope + span-event schema.
+CROSS-CUTTING — SECURITY Wraps every boundary B1–B5 (Section 10).
+```
+
+**The key split.** The original design fused "protocol + Kafka SDK." This spec separates
+them: the *protocol* (Layer 1) is a pure contract; the *Transport Abstraction* (Layer 2)
+realizes it once and adapts it to each environment and language. That single split is what
+turns a Kafka-only tracer into a tool any company can adopt.
+
+## Layer 1 — Protocol (spec §3)
+
+A contract, not code. Headers are metadata attached to the message, separate from the
+business payload — **the payload is never modified**.
+
+**Envelope headers** (carried as Kafka `record.headers`, AMQP `properties.headers`, or HTTP
+headers; settled carrier is W3C `traceparent` — see Settled decisions):
+
+| Header | Meaning |
+|---|---|
+| `x-trace-id` | Shared across the whole flow |
+| `x-span-id` | This single operation |
+| `x-parent-span-id` | The operation that triggered it |
+| `x-service-name` | Who set the headers |
+| `x-correlation-id` | Pairs a request with its reply |
+
+**Span event** (emitted to `_tracing`):
+
+| Field | Type | Description |
+|---|---|---|
+| `traceId` | UUID | Same across the entire flow |
+| `spanId` / `parentSpanId` | UUID / null | This op; link to parent (null = root) |
+| `serviceName` | string | Emitting service |
+| `spanKind` | PRODUCER / CONSUMER | Publish or receive |
+| `transport` | kafka / rabbitmq / rest | Who carried the message |
+| `channel` | string | Topic / routing key / route (renamed from `topic`) |
+| `operationName` | string | Handler / operation name |
+| `startTime` / `durationMs` | ISO-8601 / number | When + how long |
+| `status` / `error` | OK / ERROR / string | Outcome |
+| `metadata` | object / null | Optional business context — **allowlist-redacted at source** (§10) |
+
+## Layer 2 — Transport Abstraction (spec §4, the core)
+
+Two universal patterns; many transports. Business code knows only the patterns. Each
+transport declares what it supports natively vs emulated — a mismatch fails loudly at
+wiring time, not at runtime.
+
+- **Request/Reply** — `request(target, msg) → reply`. Native: REST. Emulated: Kafka/Rabbit via `correlationId` + reply channel.
+- **Publish/Subscribe** — `publish(event)` / `subscribe(pattern, handler)`. Native: Kafka, RabbitMQ. Emulated: REST via outbox + webhooks/polling.
+
+**Port + base class — inheritance where it belongs.** Transports don't inherit from each
+other. They share one thing — trace injection and span emission — which lives in
+`BaseTransport` and is inherited **once**. What differs (how bytes leave the wire) is
+implemented through the `Transport` interface (`publish` / `subscribe` / `request`, plus a
+`caps: Capabilities`). `BaseTransport.publish` injects trace context, starts a PRODUCER
+span, calls the abstract `doPublish`, then fire-and-forget emits the span to `_tracing`.
+
+**Capability matrix:**
+
+| Transport | Pub/Sub | Req/Reply | Ordering | Trace carrier |
+|---|---|---|---|---|
+| Kafka | native | emulated | per-partition | record headers |
+| RabbitMQ | native | native (RPC) | per-queue | AMQP headers |
+| REST | emulated | native | n/a | HTTP headers |
+
+## Integration model (spec §5–6)
+
+**The service developer writes zero spans, zero log calls, zero trace plumbing.** Adoption
+is at one of three levels — conceptually identical in every language:
+
+- **Zero-touch (DEFAULT)** — install + config only; the SDK hooks the framework lifecycle. No code changes.
+- **Wrap / Decorate** — one line: wrap the producer/consumer or decorate a handler. For setups the auto-hook can't reach.
+- **Inherit (OPTIONAL)** — extend `BaseTransport` only when **building a custom transport**. Not the default.
+
+Default everywhere is **composition / dependency injection**; inheritance exists only inside
+our own code and as an escape hatch for new transports.
+
+| Language | Producer hook | Consumer hook | Context carrier | Effort |
+|---|---|---|---|---|
+| TypeScript / NestJS | Custom serializer | Global interceptor | AsyncLocalStorage | npm install + 1 import |
+| Python | Wrapper / decorator | Wrapper / decorator | contextvars | pip install + wrap objects |
+| Java / Spring | ProducerInterceptor | ConsumerInterceptor | ThreadLocal | Maven dep + 2 lines yaml |
+| Any other | Manual: set headers + emit span | (same) | language-native | ~10–20 lines |
+
+## Per-transport implementation (spec §7)
+
+Each adapter implements `doPublish` / `doSubscribe` / `doRequest` and maps trace headers to
+its native mechanism; spans are emitted by `BaseTransport` for all three.
+
+- **Kafka** — carrier = `record.headers`; consumer group per service; partition key = entity id (e.g. `orderId`) for per-entity ordering; req/reply emulated via `correlationId` + `replyTo` topic; at-least-once → idempotent handlers (dedup by `spanId`); failures → DLQ.
+- **RabbitMQ** — carrier = AMQP `properties.headers`; publish to topic/fanout exchange, queues bound by routing key; req/reply native via direct reply-to (RPC) + `correlationId`; backpressure via `prefetch`, `ack`/`nack` with a Dead-Letter-Exchange.
+- **REST / HTTP** — carrier = HTTP headers (or W3C `traceparent`); req/reply native (the reply *is* the response); pub/sub emulated via an outbox table + webhook dispatcher (or subscribers poll).
+
+## Layer 3 — System internals (spec §8)
+
+**Collector → PostgreSQL → REST API → Angular UI.**
+
+- **Collector** — own consumer group `eventtracer-collector-group`; batch-inserts (100 spans **or** 500 ms); upserts the `traces` aggregate after each batch. Idempotent & order-independent — spans arrive out of order; upsert keyed by `spanId`.
+- **Database** — `spans` (raw; indexed on trace_id / service / time) + `traces` (pre-computed aggregate: root service, span count, duration, error flag) to avoid GROUP BY on listing. Time-partition + TTL; ClickHouse as a drop-in at very high volume.
+- **API** — `GET /api/traces`, `/api/traces/:id` (spans + pre-built DAG), `/api/topology`, `/api/stats`.
+- **UI (Angular 21)** — Timeline (bars on a time axis), Flow diagram (one trace as a DAG), Topology map (all traces aggregated; force-directed via D3; signals + zoneless updates).
+
+## Layer 4 — Intelligence & Security (spec §9–10)
+
+**Agent (Phase 7).** Algorithms distill structure; the agent reasons over it. Raw spans
+never reach the model — the distilled graph does. It uses read-only, RBAC-scoped tools that
+call the same API a user would. It discovers/names business processes, explains decision
+points, flags anomalies (cycles, dead branches, latency-dominant paths), and generates
+living documentation from reality.
+
+**Security boundaries:**
+
+- **B1 Ingestion** — transport identity (mTLS/SASL/AMQP auth); channel ACLs (adapters may only write `_tracing`, only the collector group reads it); PII redaction at source; fail-safe emission.
+- **B2 Storage** — encryption in transit + at rest; least-privilege DB role (INSERT/UPSERT only); TTL + GDPR erasure; replay defense via idempotent upsert by `spanId`.
+- **B3 Access** *(crown jewel)* — OIDC/JWT authN; RBAC + tenant isolation (a team sees only its own services); rate limiting + query bounds; audit log.
+- **B4 Agent** — trace data is untrusted input → defend against indirect prompt injection; read-only scoped tools; secrets in a manager; self-hosted model option.
+- **B5 Platform** — default-deny NetworkPolicies; secrets via Vault/sealed-secrets; non-root hardened pods; image scanning & signing in CI.
+
+**The one rule:** the most dangerous path is `metadata` flowing untrusted into the agent —
+sanitize at the adapter (B1), re-validate at the agent (B4).
+
+## Algorithmic core (spec §11)
+
+The domain is a graph — the algorithms are the product.
+
+| Capability | Algorithm |
+|---|---|
+| Reconstruction | tree/DAG from parent — BFS/DFS |
+| Loop detection | DFS coloring |
+| Critical path | topo-sort + DP |
+| Topology aggregation | merge DAGs → weighted graph |
+| Path variants | signature + clustering |
 
 ## Non-negotiable rules from the spec
 
