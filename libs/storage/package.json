@@ -1,0 +1,15 @@
+{
+  "name": "@ariadne/storage",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@ariadne/protocol": "0.0.1",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.22.0",
+    "drizzle-kit": "^0.31.10"
+  }
+}

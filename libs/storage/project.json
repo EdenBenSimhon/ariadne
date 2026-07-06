@@ -1,0 +1,31 @@
+{
+  "name": "storage",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/storage/src",
+  "projectType": "library",
+  "tags": ["scope:storage", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/storage",
+        "main": "libs/storage/src/index.ts",
+        "tsConfig": "libs/storage/tsconfig.lib.json",
+        "assets": ["libs/storage/*.md"]
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit generate --config=libs/storage/drizzle.config.ts"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit migrate --config=libs/storage/drizzle.config.ts"
+      }
+    }
+  }
+}

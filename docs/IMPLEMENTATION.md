@@ -9,8 +9,8 @@
 |---|---|---|
 | 1 — Protocol + Envelope | `libs/protocol` | ✅ Done |
 | 2 — Transport core + Kafka + TS SDK | `libs/transport-core`, `libs/transport-kafka`, `libs/sdk-nestjs` | ✅ Done |
-| 3 — Collector + DB | `apps/collector` + Postgres (Drizzle) | ⏳ Next |
-| 4 — API + reconstruction | `apps/api`, `libs/graph` | Planned |
+| 3 — Collector + DB | `apps/collector`, `libs/storage`, docker-compose | ✅ Done |
+| 4 — API + reconstruction | `apps/api`, `libs/graph` | ⏳ Next |
 | 5 — Angular 21 UI | `apps/ui` | Planned |
 | 6 — RabbitMQ/REST adapters, Python/Java SDKs, Security B1–B3 | | Planned |
 
@@ -124,6 +124,23 @@ npx nx run-many -t lint,test,build --all     # the full gate
 npx nx test transport-core                   # includes the chain acceptance test
 npx nx graph                                 # protocol ← transport-core ← {kafka, sdk-nestjs}
 ```
+
+## Phase 3 — Collector + DB (what was built)
+
+**Data layer (`libs/storage`, `@ariadne/storage`)** — shared by the collector now and the Phase-4 API later; `TraceStore` is the seam a ClickHouse implementation would fill at very high volume.
+- Drizzle schemas with the protocol's branded types on columns; `spans` PK `(tenant_id, span_id, start_time)` (Postgres requires the partition key in unique constraints), `traces` PK `(tenant_id, trace_id)` with a stored generated `duration_ms`.
+- Migrations in `libs/storage/drizzle/`: `0000` traces (drizzle-kit generated), `0001` hand-written partitioned `spans` (daily range partitions, pre-created −7d…+90d, `spans_ensure_partition(date)` as the TTL-job seam — no DEFAULT partition), `0002` grant tightening. Run with `nx run storage:migrate` as the owner; the collector role cannot run DDL.
+- `PgTraceStore.insertSpans` — one transaction per chunk: multi-row `INSERT … ON CONFLICT DO NOTHING … RETURNING` (first-write-wins = replay defense B2), then a commutative `traces` upsert (`COALESCE` root / `+` count / `LEAST`/`GREATEST` times / `OR` error) computed **only from RETURNING rows**, which keeps `span_count` exact under at-least-once redelivery. Rows sorted for deadlock-free concurrent replicas.
+
+**Collector (`apps/collector`)** — consumes `_tracing` with raw kafkajs (deliberately not KafkaTransport: the collector must never trace itself into `_tracing`), group `eventtracer-collector-group`.
+- Spec's "100 spans or 500 ms" realized at the broker fetch (`minBytes` + `maxWaitTimeInMs: 500`) plus ≤100-span write chunks; `eachBatchAutoResolve: false` and offsets resolve only after the chunk's transaction commits. Nothing buffers in-process — not consuming IS the backpressure when the DB is down.
+- Ingestion gate (B1): pre-parse 64 KiB size guard → `JSON.parse` → `parseSpanEvent` (strict zod) → span-age window (`now−7d … now+1d`, matching the partition range) so an attacker-controlled `startTime` can never cause an INSERT-failure loop. Invalids are counted by reason and logged rate-limited (reason kinds only, never payload).
+- DB-down: 5 bounded retries with heartbeats and exponential backoff, then rethrow → kafkajs restart → SIGTERM on non-restartable crash. Permanent (data) errors fall back to row-by-row so one poison span can't wedge a partition.
+- `GET :3001/healthz` — kafka/db status + ingestion counters; graceful shutdown stops the consumer (awaiting the in-flight batch) before closing the pool.
+
+**Infra** — `docker-compose.yml` (Kafka KRaft 3.9, Postgres 16, healthchecks) + `infra/postgres/init/01-roles.sql` (`eventtracer_collector` INSERT/UPDATE/SELECT, `eventtracer_reader` SELECT-only, default privileges for future tables).
+
+**Smoke checklist** (needs Docker; see README for commands): seed via `tools/smoke/seed-tracing.mjs` → expect 2 `traces` rows (span_count 6, root `order-service`, one `has_error`), 12 `spans` rows, `/healthz` `spansInvalid ≥ 3`; re-running the seed changes nothing (idempotent replay); `DELETE FROM spans` as the collector role is denied (least privilege).
 
 ## Deferred (tracked, deliberately not built yet)
 

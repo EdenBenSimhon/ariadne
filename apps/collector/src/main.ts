@@ -1,21 +1,15 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { COLLECTOR_CONFIG, type CollectorConfig } from './app/config/collector-config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
-  );
+  // SIGTERM → stop consumer (awaits in-flight batch) → close DB pool.
+  app.enableShutdownHooks();
+  const config = app.get<CollectorConfig>(COLLECTOR_CONFIG);
+  await app.listen(config.port);
+  Logger.log(`🛰  Collector up — health at http://localhost:${config.port}/healthz`);
 }
 
 bootstrap();

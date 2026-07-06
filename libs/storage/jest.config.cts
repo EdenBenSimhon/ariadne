@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'collector',
+  displayName: 'storage',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
@@ -8,7 +8,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   moduleNameMapper: {
     '^@ariadne/protocol$': '<rootDir>/../../libs/protocol/src/index.ts',
-    '^@ariadne/storage$': '<rootDir>/../../libs/storage/src/index.ts',
   },
-  coverageDirectory: '../../coverage/apps/collector',
+  coverageDirectory: '../../coverage/libs/storage',
 };

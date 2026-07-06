@@ -30,11 +30,16 @@ export default [
               onlyDependOnLibsWithTags: ['scope:protocol', 'scope:transport', 'scope:sdk'],
             },
             {
+              sourceTag: 'scope:storage',
+              onlyDependOnLibsWithTags: ['scope:protocol', 'scope:storage'],
+            },
+            {
               sourceTag: 'scope:app',
               onlyDependOnLibsWithTags: [
                 'scope:protocol',
                 'scope:transport',
                 'scope:sdk',
+                'scope:storage',
                 'scope:app',
               ],
             },
