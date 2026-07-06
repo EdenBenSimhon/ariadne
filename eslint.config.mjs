@@ -34,12 +34,17 @@ export default [
               onlyDependOnLibsWithTags: ['scope:protocol', 'scope:storage'],
             },
             {
+              sourceTag: 'scope:graph',
+              onlyDependOnLibsWithTags: ['scope:protocol', 'scope:graph'],
+            },
+            {
               sourceTag: 'scope:app',
               onlyDependOnLibsWithTags: [
                 'scope:protocol',
                 'scope:transport',
                 'scope:sdk',
                 'scope:storage',
+                'scope:graph',
                 'scope:app',
               ],
             },

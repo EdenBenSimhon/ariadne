@@ -1,0 +1,19 @@
+{
+  "name": "graph",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/graph/src",
+  "projectType": "library",
+  "tags": ["scope:graph", "platform:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/graph",
+        "main": "libs/graph/src/index.ts",
+        "tsConfig": "libs/graph/tsconfig.lib.json",
+        "assets": ["libs/graph/*.md"]
+      }
+    }
+  }
+}

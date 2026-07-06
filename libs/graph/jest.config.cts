@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'api',
+  displayName: 'graph',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
@@ -8,8 +8,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   moduleNameMapper: {
     '^@ariadne/protocol$': '<rootDir>/../../libs/protocol/src/index.ts',
-    '^@ariadne/storage$': '<rootDir>/../../libs/storage/src/index.ts',
-    '^@ariadne/graph$': '<rootDir>/../../libs/graph/src/index.ts',
   },
-  coverageDirectory: '../../coverage/apps/api',
+  coverageDirectory: '../../coverage/libs/graph',
 };

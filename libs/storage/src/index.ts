@@ -4,4 +4,6 @@ export * from './lib/schema/spans';
 export * from './lib/schema/traces';
 export * from './lib/span-row';
 export * from './lib/trace-aggregate';
+export * from './lib/trace-reader';
+export * from './lib/trace-row';
 export * from './lib/trace-store';

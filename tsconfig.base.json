@@ -22,7 +22,8 @@
       ],
       "@ariadne/transport-kafka": ["./libs/transport-kafka/src/index.ts"],
       "@ariadne/sdk-nestjs": ["./libs/sdk-nestjs/src/index.ts"],
-      "@ariadne/storage": ["./libs/storage/src/index.ts"]
+      "@ariadne/storage": ["./libs/storage/src/index.ts"],
+      "@ariadne/graph": ["./libs/graph/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
