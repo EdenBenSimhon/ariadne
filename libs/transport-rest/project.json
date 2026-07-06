@@ -1,0 +1,19 @@
+{
+  "name": "transport-rest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/transport-rest/src",
+  "projectType": "library",
+  "tags": ["scope:transport", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/transport-rest",
+        "main": "libs/transport-rest/src/index.ts",
+        "tsConfig": "libs/transport-rest/tsconfig.lib.json",
+        "assets": ["libs/transport-rest/*.md"]
+      }
+    }
+  }
+}

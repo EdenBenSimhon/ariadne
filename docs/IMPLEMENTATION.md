@@ -10,9 +10,10 @@
 | 1 — Protocol + Envelope | `libs/protocol` | ✅ Done |
 | 2 — Transport core + Kafka + TS SDK | `libs/transport-core`, `libs/transport-kafka`, `libs/sdk-nestjs` | ✅ Done |
 | 3 — Collector + DB | `apps/collector`, `libs/storage`, docker-compose | ✅ Done |
-| 4 — API + reconstruction | `apps/api`, `libs/graph` | ⏳ Next |
-| 5 — Angular 21 UI | `apps/ui` | Planned |
-| 6 — RabbitMQ/REST adapters, Python/Java SDKs, Security B1–B3 | | Planned |
+| 4 — API + reconstruction | `apps/api`, `libs/graph` | ✅ Done |
+| 5 — Angular 21 UI | `apps/ui` (signals, zoneless, D3 topology) | ✅ Done |
+| 6 — RabbitMQ + REST adapters | `libs/transport-rabbitmq`, `libs/transport-rest` | ✅ Done (Python/Java SDKs + OIDC auth deferred) |
+| 7 — Intelligence (seed) | `apps/mcp` — MCP server over the distilled graph, `discover_business_flows` path-signature clustering | ✅ Seeded |
 
 **Verification gate (all green):** `npx nx run-many -t lint,test,build --all` — 89 unit tests across 4 libraries, including an end-to-end trace-chain acceptance test.
 

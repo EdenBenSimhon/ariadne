@@ -1,0 +1,19 @@
+{
+  "name": "transport-rabbitmq",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/transport-rabbitmq/src",
+  "projectType": "library",
+  "tags": ["scope:transport", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/transport-rabbitmq",
+        "main": "libs/transport-rabbitmq/src/index.ts",
+        "tsConfig": "libs/transport-rabbitmq/tsconfig.lib.json",
+        "assets": ["libs/transport-rabbitmq/*.md"]
+      }
+    }
+  }
+}
