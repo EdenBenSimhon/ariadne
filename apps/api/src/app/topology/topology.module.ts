@@ -7,5 +7,6 @@ import { TopologyService } from './topology.service';
   imports: [ApiStorageModule],
   controllers: [TopologyController],
   providers: [TopologyService],
+  exports: [TopologyService],
 })
 export class TopologyModule {}

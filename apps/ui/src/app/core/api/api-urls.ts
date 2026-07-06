@@ -23,6 +23,14 @@ export function topologyUrl(): string {
   return '/api/topology';
 }
 
+export function flowsUrl(sampleSize = 50): string {
+  return `/api/flows?sampleSize=${sampleSize}`;
+}
+
+export function anomaliesUrl(sampleSize = 50): string {
+  return `/api/anomalies?sampleSize=${sampleSize}`;
+}
+
 export function statsUrl(): string {
   return '/api/stats';
 }

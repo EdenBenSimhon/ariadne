@@ -12,6 +12,10 @@ export const appRoutes: Route[] = [
       import('./features/trace-detail/trace-detail-page').then((m) => m.TraceDetailPage),
   },
   {
+    path: 'flows',
+    loadComponent: () => import('./features/flows/flows-page').then((m) => m.FlowsPage),
+  },
+  {
     path: 'topology',
     loadComponent: () =>
       import('./features/topology/topology-page').then((m) => m.TopologyPage),

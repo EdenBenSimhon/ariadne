@@ -1,0 +1,44 @@
+.anomalies {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+
+  .anomaly {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 0;
+    font-size: 13px;
+
+    .subject {
+      white-space: nowrap;
+    }
+  }
+}
+
+.signature {
+  font-size: 11px;
+  max-width: 420px;
+  white-space: normal;
+}
+
+.chip {
+  display: inline-block;
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 0 8px;
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+.sampled {
+  margin-top: 10px;
+  font-size: 12px;
+}

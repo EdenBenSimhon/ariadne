@@ -1,3 +1,4 @@
+export * from './lib/anomalies';
 export * from './lib/build-topology';
 export * from './lib/build-trace-dag';
 export * from './lib/contract';

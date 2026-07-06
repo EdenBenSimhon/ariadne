@@ -1,0 +1,63 @@
+@if (anomalyItems().length > 0) {
+  <section class="anomalies panel">
+    <h3>Anomalies</h3>
+    @for (anomaly of anomalyItems(); track anomaly.subject + anomaly.kind) {
+      <div class="anomaly" [class]="anomaly.severity">
+        <span class="badge" [class.error]="anomaly.severity !== 'info'" [class.ok]="anomaly.severity === 'info'">
+          {{ anomaly.severity }}
+        </span>
+        <span class="kind dim">{{ anomaly.kind }}</span>
+        <span class="mono subject">{{ anomaly.subject }}</span>
+        <span class="dim">{{ anomaly.detail }}</span>
+      </div>
+    }
+  </section>
+}
+
+@if (flows.isLoading()) {
+  <div class="state-note">discovering business flows…</div>
+} @else if (flows.error()) {
+  <div class="state-note">failed to load flows — is the API running?</div>
+} @else if (flowItems().length === 0) {
+  <div class="state-note">no flows discovered in the sampled window</div>
+} @else {
+  <div class="panel">
+    <table class="et-table">
+      <thead>
+        <tr>
+          <th>Business flow</th>
+          <th>Services</th>
+          <th>Runs</th>
+          <th>Error rate</th>
+          <th>Avg duration</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (flow of flowItems(); track flow.signature) {
+          <tr>
+            <td class="mono signature">{{ flow.signature }}</td>
+            <td>
+              @for (service of flow.services; track service) {
+                <span class="chip" [style.border-color]="serviceColor(service)">{{ service }}</span>
+              }
+            </td>
+            <td>{{ flow.traceCount }}</td>
+            <td>
+              <span class="badge" [class.error]="flow.errorRate > 0" [class.ok]="flow.errorRate === 0">
+                {{ (flow.errorRate * 100).toFixed(0) }}%
+              </span>
+            </td>
+            <td class="mono">{{ formatDuration(flow.avgDurationMs) }}</td>
+            <td>
+              <a [routerLink]="['/traces', flow.exampleTraceId]" class="mono">
+                {{ shortId(flow.exampleTraceId) }}
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="dim sampled">clustered from {{ flows.value()?.sampledTraces }} sampled traces — the MCP agent sees this same data</p>
+}

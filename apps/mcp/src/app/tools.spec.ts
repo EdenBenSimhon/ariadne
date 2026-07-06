@@ -105,19 +105,28 @@ describe('mcp tools', () => {
     expect(client.get).not.toHaveBeenCalled();
   });
 
-  it('discover_business_flows samples details and clusters them', async () => {
-    const detail = detailFixture();
+  it('discover_business_flows delegates to the shared /flows endpoint (same as the UI)', async () => {
     const client = fakeClient({
-      [`/traces/${traceId}`]: detail,
-      '/traces?': { items: [detail.trace, detail.trace], nextCursor: null },
+      '/flows': { sampledTraces: 2, flows: [{ signature: 'order -[orders.created]-> inventory', traceCount: 2 }] },
     });
     const result = (await tool('discover_business_flows').handler(client, {
       sampleSize: 10,
-    })) as { sampledTraces: number; flows: Array<{ traceCount: number; signature: string }> };
+      status: 'error',
+    })) as { sampledTraces: number };
 
     expect(result.sampledTraces).toBe(2);
-    expect(result.flows).toHaveLength(1);
-    expect(result.flows[0]?.traceCount).toBe(2);
-    expect(result.flows[0]?.signature).toContain('order -[orders.created]-> inventory');
+    expect((client.get as jest.Mock).mock.calls[0]?.[0]).toBe('/flows?sampleSize=10&status=error');
+  });
+
+  it('find_anomalies delegates to the shared /anomalies endpoint', async () => {
+    const client = fakeClient({
+      '/anomalies': { sampledTraces: 5, anomalies: [{ kind: 'failing-flow', severity: 'critical' }] },
+    });
+    const result = (await tool('find_anomalies').handler(client, {})) as {
+      anomalies: Array<{ kind: string }>;
+    };
+
+    expect(result.anomalies[0]?.kind).toBe('failing-flow');
+    expect((client.get as jest.Mock).mock.calls[0]?.[0]).toBe('/anomalies?sampleSize=50');
   });
 });

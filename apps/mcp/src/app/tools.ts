@@ -1,12 +1,12 @@
 import { traceIdSchema } from '@ariadne/protocol';
-import {
-  discoverBusinessFlows,
-  type FlowTraceInput,
-  type Paginated,
-  type StatsSummary,
-  type TopologyGraph,
-  type TraceDetail,
-  type TraceSummary,
+import type {
+  AnomaliesResponse,
+  FlowsResponse,
+  Paginated,
+  StatsSummary,
+  TopologyGraph,
+  TraceDetail,
+  TraceSummary,
 } from '@ariadne/graph';
 import type { ApiClient } from './api-client';
 import { distillTraceFlow } from './distill';
@@ -92,33 +92,36 @@ export const mcpTools: readonly McpToolDef[] = [
     description:
       'Discover the business processes that actually run: clusters recent traces by their ' +
       'service/channel hop signature and returns each distinct flow with frequency, error rate ' +
-      'and average duration. Use this to name and explain the emergent choreography.',
+      'and average duration. Use this to name and explain the emergent choreography. ' +
+      'Served by the same API endpoint the UI Flows page uses.',
     inputSchema: {
       type: 'object',
       properties: {
-        sampleSize: { type: 'number', description: 'traces to sample (1-50, default 25)' },
+        sampleSize: { type: 'number', description: 'traces to sample (1-100, default 50)' },
         status: { type: 'string', enum: ['ok', 'error'] },
       },
     },
     handler: async (client, args) => {
-      const sampleSize = clampLimit(args['sampleSize'], 25, 50);
-      const page = await client.get<Paginated<TraceSummary>>(
-        `/traces?limit=${sampleSize}${statusParam(args['status'])}`
+      const sampleSize = clampLimit(args['sampleSize'], 50, 100);
+      return client.get<FlowsResponse>(
+        `/flows?sampleSize=${sampleSize}${statusParam(args['status'])}`
       );
-      const inputs: FlowTraceInput[] = [];
-      for (const summary of page.items) {
-        const detail = await client.get<TraceDetail>(`/traces/${summary.traceId}`);
-        inputs.push({
-          traceId: detail.trace.traceId,
-          durationMs: detail.trace.durationMs,
-          hasError: detail.trace.hasError,
-          dag: detail.dag,
-        });
-      }
-      return {
-        sampledTraces: inputs.length,
-        flows: discoverBusinessFlows(inputs),
-      };
+    },
+  },
+  {
+    name: 'find_anomalies',
+    description:
+      'Flag anomalies in the observed system: unexpected service cycles, error hotspots on ' +
+      'specific hops, latency-dominant hops, and failing business flows — ordered by severity.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sampleSize: { type: 'number', description: 'traces to sample for flow analysis (1-100, default 50)' },
+      },
+    },
+    handler: async (client, args) => {
+      const sampleSize = clampLimit(args['sampleSize'], 50, 100);
+      return client.get<AnomaliesResponse>(`/anomalies?sampleSize=${sampleSize}`);
     },
   },
 ];

@@ -30,6 +30,16 @@ export interface TraceDetail {
   readonly criticalPath: CriticalPath;
 }
 
+export interface FlowsResponse {
+  readonly sampledTraces: number;
+  readonly flows: readonly import('./flow-signature').BusinessFlow[];
+}
+
+export interface AnomaliesResponse {
+  readonly sampledTraces: number;
+  readonly anomalies: readonly import('./anomalies').Anomaly[];
+}
+
 export interface StatsSummary {
   readonly traceCount: number;
   readonly errorTraceCount: number;

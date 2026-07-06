@@ -4,7 +4,11 @@
  * Responses are trusted server output; validation lives server-side (B3).
  */
 export type {
+  AnomaliesResponse,
+  Anomaly,
+  BusinessFlow,
   CriticalPath,
+  FlowsResponse,
   GraphSpan,
   Paginated,
   StatsSummary,

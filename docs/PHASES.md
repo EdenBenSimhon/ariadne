@@ -3,7 +3,7 @@
 Every phase from the spec (§12) with its concrete steps and where each landed.
 ✅ done · 🔜 deferred (documented seam) · ➖ out of MVP scope by design.
 
-**Verification:** `npx nx run-many -t lint,test,build --all` — 13 projects, 240 tests, all green (commit `e6b6731` on `dev`).
+**Verification:** `npx nx run-many -t lint,test,build --all` — 14 projects, 262 tests, all green (branch `feature/phase6-7-completion`).
 
 ---
 
@@ -77,16 +77,19 @@ Every phase from the spec (§12) with its concrete steps and where each landed.
 - [x] Security B1: transport auth plumbing (SASL/SSL config), `_tracing` separation, redaction at source
 - [x] Security B2: least-privilege DB roles, idempotent replay defense, SSL switches
 - [x] Security B3 (baseline): required validated tenant header, structural tenant isolation in SQL, bounded queries; 🔜 OIDC/JWT + RBAC + rate limiting behind the `@Tenant()` seam
+- [x] REST server-side tracing (`createTracedRestServer` — CONSUMER spans from inbound HTTP, handlers in ALS context)
 - [ ] 🔜 REST pub/sub emulation (outbox + webhooks)
 - [ ] 🔜 Python SDK (decorator + contextvars), Java/Spring SDK (interceptors + ThreadLocal) — protocol is language-neutral; generic manual integration is ~15 lines
-- [ ] 🔜 Demo mesh (3 sample services over Kafka+RabbitMQ+REST in compose) proving the MVP DoD live
+- [x] Demo mesh `apps/demo-mesh`: POST /orders → one connected trace across Kafka + RabbitMQ + REST, zero tracing code in handlers (run: `npx nx serve demo-mesh`)
 
 ## Phase 7 — Intelligence ✅ seeded  (`apps/mcp`)
 
 - [x] `computeFlowSignature` + `discoverBusinessFlows` (path-signature clustering — spec §11 "path variants")
 - [x] MCP stdio server: `discover_business_flows`, `get_trace_flow`, `get_topology`, `list_traces`, `get_stats`
 - [x] B4: read-only tenant-scoped tools; raw spans/metadata never reach the model; error strings sanitized
-- [ ] 🔜 anomaly flagging (unexpected cycles, latency-dominant paths) as dedicated tools; living-documentation generation
+- [x] Anomaly flagging: `detectAnomalies` (cycles, error hotspots, latency-dominant hops, failing flows) — served by `/api/anomalies`, shown in the UI Flows tab, exposed as the MCP `find_anomalies` tool
+- [x] `/api/flows` + UI **Flows** page — the UI and the MCP agent consume the same distilled endpoints
+- [ ] 🔜 living-documentation generation
 
 ## Phase 8 — Kubernetes + high scale ➖ (post-MVP by design)
 

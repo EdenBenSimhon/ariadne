@@ -38,7 +38,20 @@ npx nx serve api                # health: http://localhost:3000/api/healthz
 npx nx serve ui                 # http://localhost:4200
 ```
 
-## 3. See a trace end-to-end (no services needed)
+## 3. The real thing: one request across Kafka + RabbitMQ + REST
+
+The demo mesh is the MVP's definition of done — three services with **zero tracing code**, chained across all three transports:
+
+```bash
+npx nx serve demo-mesh     # order-service (REST :4001) → kafka → inventory → rabbitmq → payment → rest → order
+
+curl -s -X POST localhost:4001/orders \
+  -H 'content-type: application/json' -d '{"orderId":"ord-42"}'
+```
+
+Wait ~2 seconds (collector batch window), then open **http://localhost:4200** — one connected trace: REST CONSUMER → Kafka PRODUCER/CONSUMER → RabbitMQ PRODUCER/CONSUMER → REST PRODUCER/CONSUMER, all under a single traceId. The **Flows** tab now shows the discovered business flow `order-service -[orders.created]-> inventory-service | …` with its run count and error rate.
+
+## 3b. See a trace end-to-end (no brokers running for the mesh)
 
 Seed the spec's worked example — one `POST /orders` flow producing a 6-span chain across three services — straight into `_tracing`:
 
@@ -265,9 +278,12 @@ Tools exposed (all read-only, tenant-scoped):
 | Tool | What it answers |
 |---|---|
 | `discover_business_flows` | *"What business processes actually run here?"* — clusters recent traces by their service/channel hop signature: each distinct flow with frequency, error rate, avg duration |
+| `find_anomalies` | *"What's wrong?"* — service cycles, error-hotspot hops, latency-dominant hops, failing flows, ordered by severity |
 | `get_trace_flow` | one trace as hops + critical path + sanitized errors (no spans, no metadata) |
 | `get_topology` | who talks to whom, over which channels, with weights and loops |
 | `list_traces`, `get_stats` | recent traces and tenant-wide health numbers |
+
+**The UI and the AI see the same picture:** `discover_business_flows` and `find_anomalies` are served by the same `/api/flows` and `/api/anomalies` endpoints that power the UI's **Flows** tab — one implementation in `libs/graph`, three consumers (API, UI, MCP).
 
 Example prompt once connected: *"Discover the business flows in my system, name them, and tell me which one is failing most and where in the chain it breaks."* The model calls `discover_business_flows`, then drills into failing examples with `get_trace_flow` — exactly the spec §9 loop: algorithms distill, the agent reasons and explains.
 
