@@ -1,0 +1,21 @@
+{
+  "name": "@ariadne/sdk-nestjs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@ariadne/protocol": "0.0.1",
+    "@ariadne/transport-core": "0.0.1",
+    "@ariadne/transport-kafka": "0.0.1"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "kafkajs": "^2.2.4",
+    "rxjs": "^7.8.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "transport-kafka",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/transport-kafka/src",
+  "projectType": "library",
+  "tags": [
+    "platform:node",
+    "scope:transport"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/transport-kafka",
+        "main": "libs/transport-kafka/src/index.ts",
+        "tsConfig": "libs/transport-kafka/tsconfig.lib.json",
+        "assets": [
+          "libs/transport-kafka/*.md"
+        ]
+      }
+    }
+  }
+}

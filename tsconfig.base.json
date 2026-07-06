@@ -15,7 +15,11 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@ariadne/protocol": ["./libs/protocol/src/index.ts"]
+      "@ariadne/protocol": ["./libs/protocol/src/index.ts"],
+      "@ariadne/transport-core": ["./libs/transport-core/src/index.ts"],
+      "@ariadne/transport-core/testing": ["./libs/transport-core/src/testing.ts"],
+      "@ariadne/transport-kafka": ["./libs/transport-kafka/src/index.ts"],
+      "@ariadne/sdk-nestjs": ["./libs/sdk-nestjs/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

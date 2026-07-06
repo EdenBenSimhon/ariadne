@@ -4,11 +4,16 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/ui/src",
-  "tags": [],
+  "tags": [
+    "scope:app",
+    "platform:browser"
+  ],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/apps/ui",
         "browser": "apps/ui/src/main.ts",
@@ -20,7 +25,9 @@
             "input": "apps/ui/public"
           }
         ],
-        "styles": ["apps/ui/src/styles.scss"]
+        "styles": [
+          "apps/ui/src/styles.scss"
+        ]
       },
       "configurations": {
         "production": {
@@ -64,7 +71,9 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "apps/ui/jest.config.cts",
         "tsConfig": "apps/ui/tsconfig.spec.json"

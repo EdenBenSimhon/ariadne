@@ -1,0 +1,26 @@
+{
+  "name": "transport-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/transport-core/src",
+  "projectType": "library",
+  "tags": [
+    "platform:node",
+    "scope:transport"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/transport-core",
+        "main": "libs/transport-core/src/index.ts",
+        "tsConfig": "libs/transport-core/tsconfig.lib.json",
+        "assets": [
+          "libs/transport-core/*.md"
+        ]
+      }
+    }
+  }
+}

@@ -3,16 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/protocol/src",
   "projectType": "library",
-  "tags": [],
+  "tags": [
+    "scope:protocol",
+    "platform:shared"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/libs/protocol",
         "main": "libs/protocol/src/index.ts",
         "tsConfig": "libs/protocol/tsconfig.lib.json",
-        "assets": ["libs/protocol/*.md"]
+        "assets": [
+          "libs/protocol/*.md"
+        ]
       }
     }
   }
