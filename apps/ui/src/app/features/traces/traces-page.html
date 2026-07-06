@@ -1,0 +1,56 @@
+<div class="filters">
+  <input
+    type="text"
+    placeholder="filter by root service…"
+    #svc
+    [value]="service()"
+    (keyup.enter)="applyService(svc.value)"
+  />
+  <button class="btn" [class.on]="onlyErrors()" (click)="toggleErrors()">errors only</button>
+</div>
+
+@if (traces.isLoading()) {
+  <div class="state-note">loading traces…</div>
+} @else if (traces.error()) {
+  <div class="state-note">failed to load traces — is the API running on :3000?</div>
+} @else if (items().length === 0) {
+  <div class="state-note">no traces in this window</div>
+} @else {
+  <div class="panel">
+    <table class="et-table">
+      <thead>
+        <tr>
+          <th>Trace</th>
+          <th>Root service</th>
+          <th>Spans</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (trace of items(); track trace.traceId) {
+          <tr [routerLink]="['/traces', trace.traceId]">
+            <td class="mono">{{ shortId(trace.traceId) }}</td>
+            <td>
+              <span class="dot" [style.background]="serviceColor(trace.rootService ?? '')"></span>
+              {{ trace.rootService ?? '—' }}
+            </td>
+            <td>{{ trace.spanCount }}</td>
+            <td>
+              <span class="badge" [class.error]="trace.hasError" [class.ok]="!trace.hasError">
+                {{ trace.hasError ? 'ERROR' : 'OK' }}
+              </span>
+            </td>
+            <td class="mono">{{ formatDuration(trace.durationMs) }}</td>
+            <td class="dim">{{ formatTime(trace.startTime) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <button class="btn" [disabled]="!hasPrev()" (click)="prev()">← newer</button>
+    <button class="btn" [disabled]="nextCursor() === null" (click)="next()">older →</button>
+  </div>
+}

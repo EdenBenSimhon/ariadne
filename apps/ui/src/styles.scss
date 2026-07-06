@@ -1,1 +1,167 @@
-/* You can add global styles to this file, and also import other style files */
+/* EventTracer — dark dev-tool theme */
+:root {
+  --bg: #0d1117;
+  --bg-raised: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --error: #f85149;
+  --ok: #3fb950;
+  --svc-0: #58a6ff;
+  --svc-1: #3fb950;
+  --svc-2: #d29922;
+  --svc-3: #bc8cff;
+  --svc-4: #39c5cf;
+  --svc-5: #f778ba;
+  --svc-6: #ffa657;
+  --svc-7: #7ee787;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.panel {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.et-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th {
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tbody tr:hover {
+    background: rgba(88, 166, 255, 0.06);
+    cursor: pointer;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+
+  &.ok {
+    color: var(--ok);
+    border: 1px solid var(--ok);
+  }
+
+  &.error {
+    color: var(--error);
+    border: 1px solid var(--error);
+  }
+}
+
+.btn {
+  background: var(--bg-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+input[type='text'] {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.state-note {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+/* Topology (D3 island styles must be global — content is outside Angular) */
+.topo {
+  width: 100%;
+  height: 100%;
+
+  .edge {
+    stroke: var(--border);
+    stroke-opacity: 0.9;
+
+    &.error {
+      stroke: var(--error);
+    }
+  }
+
+  g.node {
+    cursor: grab;
+
+    circle {
+      stroke: var(--bg);
+      stroke-width: 2px;
+    }
+
+    text {
+      fill: var(--text);
+      font-size: 12px;
+      text-anchor: middle;
+      paint-order: stroke;
+      stroke: var(--bg);
+      stroke-width: 3px;
+    }
+  }
+}

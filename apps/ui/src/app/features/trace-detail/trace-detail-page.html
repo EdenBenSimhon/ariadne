@@ -1,0 +1,39 @@
+<a routerLink="/traces" class="dim">← traces</a>
+
+@if (detail.isLoading()) {
+  <div class="state-note">loading trace…</div>
+} @else if (detail.error()) {
+  <div class="state-note">trace not found</div>
+} @else if (trace(); as t) {
+  <header class="head">
+    <h2 class="mono">{{ shortId(t.traceId) }}</h2>
+    <span class="badge" [class.error]="t.hasError" [class.ok]="!t.hasError">
+      {{ t.hasError ? 'ERROR' : 'OK' }}
+    </span>
+    <span class="dim">{{ t.rootService ?? 'unknown root' }}</span>
+    <span class="dim">{{ t.spanCount }} spans</span>
+    <span class="mono">{{ formatDuration(t.durationMs) }}</span>
+    <span class="dim">critical path {{ formatDuration(criticalPathMs()) }}</span>
+    <span class="dim">{{ formatTime(t.startTime) }}</span>
+  </header>
+
+  <div class="tabs">
+    <button class="btn" [class.on]="view() === 'timeline'" (click)="view.set('timeline')">
+      Timeline
+    </button>
+    <button class="btn" [class.on]="view() === 'flow'" (click)="view.set('flow')">Flow</button>
+  </div>
+
+  @if (dag(); as d) {
+    @if (d.orphanCount > 0) {
+      <div class="state-note">
+        ⚠ partial trace — {{ d.orphanCount }} span(s) arrived without their parent
+      </div>
+    }
+    @if (view() === 'timeline') {
+      <app-timeline [dag]="d" />
+    } @else {
+      <app-flow [dag]="d" />
+    }
+  }
+}

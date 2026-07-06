@@ -1,0 +1,22 @@
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .btn.on {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}

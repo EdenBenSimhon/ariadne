@@ -1,0 +1,38 @@
+.flow {
+  overflow: auto;
+  padding: 12px;
+}
+
+.edge {
+  stroke: var(--border);
+  stroke-width: 1.5;
+
+  &.error {
+    stroke: var(--error);
+  }
+}
+
+rect.node {
+  fill: var(--bg-raised);
+  stroke-width: 1.5;
+
+  &.error {
+    stroke: var(--error) !important;
+  }
+}
+
+text {
+  fill: var(--text);
+  font-size: 12px;
+
+  &.op {
+    fill: var(--text-dim);
+    font-size: 10px;
+  }
+
+  &.orphan {
+    fill: var(--error);
+    font-size: 10px;
+    text-anchor: end;
+  }
+}

@@ -1,0 +1,27 @@
+<div class="flow panel">
+  <svg [attr.viewBox]="viewBox()" [attr.width]="layout().width" [attr.height]="layout().height + 20">
+    @for (edge of layout().edges; track edge.path) {
+      <path class="edge" [class.error]="edge.error" [attr.d]="edge.path" fill="none"></path>
+    }
+    @for (item of layout().nodes; track item.node.spanId) {
+      <g [attr.transform]="'translate(' + item.x + ',' + item.y + ')'">
+        <rect
+          class="node"
+          [class.error]="item.node.status === 'ERROR'"
+          [attr.width]="opts.nodeW"
+          [attr.height]="opts.nodeH"
+          rx="6"
+          [attr.stroke]="serviceColor(item.node.serviceName)"
+        ></rect>
+        <text class="svc" x="10" y="20">{{ item.node.serviceName }}</text>
+        <text class="op" x="10" y="38">
+          {{ item.node.spanKind }} · {{ item.node.channel }} ·
+          {{ formatDuration(item.node.durationMs) }}
+        </text>
+        @if (item.node.orphaned) {
+          <text class="orphan" [attr.x]="opts.nodeW - 10" y="20">orphan</text>
+        }
+      </g>
+    }
+  </svg>
+</div>

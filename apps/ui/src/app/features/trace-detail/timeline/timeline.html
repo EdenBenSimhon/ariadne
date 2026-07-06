@@ -1,0 +1,32 @@
+<div class="timeline panel">
+  <div class="row axis">
+    <div class="label"></div>
+    <div class="track">
+      @for (tick of ticks(); track tick.leftPct) {
+        <span class="tick" [style.left.%]="tick.leftPct">{{ tick.label }}</span>
+      }
+    </div>
+  </div>
+  @for (row of rows(); track row.node.spanId) {
+    <div class="row" [class.error]="row.node.status === 'ERROR'">
+      <div class="label" [style.padding-left.px]="row.node.depth * 16">
+        <span class="dot" [style.background]="serviceColor(row.node.serviceName)"></span>
+        <span>{{ row.node.serviceName }}</span>
+        <span class="dim op">{{ row.node.operationName }}</span>
+        @if (row.node.orphaned) {
+          <span class="badge error">orphan</span>
+        }
+      </div>
+      <div class="track">
+        <div
+          class="bar"
+          [style.left.%]="row.leftPct"
+          [style.width.%]="row.widthPct"
+          [style.background]="serviceColor(row.node.serviceName)"
+          [title]="tooltip(row)"
+        ></div>
+        <span class="dur mono dim">{{ formatDuration(row.node.durationMs) }}</span>
+      </div>
+    </div>
+  }
+</div>

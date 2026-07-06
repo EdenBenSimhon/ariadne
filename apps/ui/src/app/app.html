@@ -1,2 +1,10 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<header class="topbar">
+  <span class="brand">EventTracer</span>
+  <nav>
+    <a routerLink="/traces" routerLinkActive="active">Traces</a>
+    <a routerLink="/topology" routerLinkActive="active">Topology</a>
+  </nav>
+</header>
+<main>
+  <router-outlet></router-outlet>
+</main>

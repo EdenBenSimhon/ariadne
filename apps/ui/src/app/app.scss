@@ -1,0 +1,39 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+
+  .brand {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  nav {
+    display: flex;
+    gap: 16px;
+
+    a {
+      color: var(--text-dim);
+
+      &.active,
+      &:hover {
+        color: var(--text);
+      }
+    }
+  }
+}
+
+main {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}

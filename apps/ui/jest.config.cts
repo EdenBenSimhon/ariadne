@@ -12,7 +12,11 @@ module.exports = {
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|d3-[a-z-]+|internmap))'],
+  moduleNameMapper: {
+    '^@ariadne/protocol$': '<rootDir>/../../libs/protocol/src/index.ts',
+    '^@ariadne/graph$': '<rootDir>/../../libs/graph/src/index.ts',
+  },
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
