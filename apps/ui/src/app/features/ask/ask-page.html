@@ -1,0 +1,78 @@
+<section class="ask">
+  <div class="thread">
+    @if (messages().length === 0) {
+      <div class="empty panel">
+        <h3>Ask the system</h3>
+        <p class="dim">
+          Ask in plain language — a local model reasons over the EventTracer MCP tools
+          (the same distilled trace data the Flows and Topology pages show) and answers.
+        </p>
+        <div class="suggestions">
+          @for (suggestion of suggestions; track suggestion) {
+            <button type="button" class="suggestion" (click)="pick(suggestion)">
+              {{ suggestion }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @for (message of messages(); track $index) {
+      <div class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
+        <div class="bubble">
+          <div class="text">{{ message.content }}</div>
+
+          @if (message.steps && message.steps.length > 0) {
+            <div class="tools">
+              <span class="dim">tools used:</span>
+              @for (step of message.steps; track $index) {
+                <span class="badge" [class.ok]="step.ok" [class.error]="!step.ok">
+                  {{ step.tool }}
+                </span>
+              }
+            </div>
+          }
+
+          @if (message.traceIds && message.traceIds.length > 0) {
+            <div class="traces">
+              <span class="dim">traces:</span>
+              @for (traceId of message.traceIds; track traceId) {
+                <a [routerLink]="['/traces', traceId]" class="mono chip">{{ shortId(traceId) }}</a>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (pending()) {
+      <div class="message assistant">
+        <div class="bubble pending">
+          <span class="typing" aria-label="thinking">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+          <span class="dim status">{{ status() }}</span>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="state-note error-note">{{ error() }}</div>
+    }
+  </div>
+
+  <form class="composer" (ngSubmit)="send()">
+    <input
+      type="text"
+      name="draft"
+      placeholder="Ask about flows, failures, services…"
+      autocomplete="off"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      [disabled]="pending()"
+    />
+    <button type="submit" [disabled]="!canSend()">Ask</button>
+  </form>
+</section>

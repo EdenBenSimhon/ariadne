@@ -3,5 +3,10 @@
     "target": "http://localhost:3000",
     "secure": false,
     "changeOrigin": false
+  },
+  "/agent": {
+    "target": "http://localhost:3300",
+    "secure": false,
+    "changeOrigin": false
   }
 }

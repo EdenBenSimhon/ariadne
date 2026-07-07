@@ -16,6 +16,10 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./features/flows/flows-page').then((m) => m.FlowsPage),
   },
   {
+    path: 'ask',
+    loadComponent: () => import('./features/ask/ask-page').then((m) => m.AskPage),
+  },
+  {
     path: 'live',
     loadComponent: () => import('./features/live/live-page').then((m) => m.LivePage),
   },

@@ -1,0 +1,163 @@
+.ask {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.thread {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 16px;
+}
+
+.empty {
+  h3 {
+    margin: 0 0 8px;
+  }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .suggestion {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--text-dim);
+    }
+  }
+}
+
+.message {
+  display: flex;
+
+  &.user {
+    justify-content: flex-end;
+  }
+
+  &.assistant {
+    justify-content: flex-start;
+  }
+
+  .bubble {
+    max-width: 80%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+  }
+
+  &.user .bubble {
+    background: var(--accent, #2d4b7a);
+    border-color: transparent;
+  }
+
+  .text {
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  .tools,
+  .traces {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+
+  .bubble.pending {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status {
+    font-size: 13px;
+  }
+
+  .typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      animation: ask-bounce 1.2s infinite ease-in-out both;
+    }
+
+    .dot:nth-child(1) {
+      animation-delay: -0.24s;
+    }
+    .dot:nth-child(2) {
+      animation-delay: -0.12s;
+    }
+    .dot:nth-child(3) {
+      animation-delay: 0s;
+    }
+  }
+}
+
+@keyframes ask-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+
+  input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.error-note {
+  color: var(--error, #e05252);
+}
