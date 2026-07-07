@@ -29,6 +29,13 @@
       "when": 1783370250675,
       "tag": "0003_insights_and_search",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783370250676,
+      "tag": "0004_alerts_and_retention",
+      "breakpoints": true
     }
   ]
 }

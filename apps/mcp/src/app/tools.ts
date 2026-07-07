@@ -1,5 +1,7 @@
 import { traceIdSchema } from '@ariadne/protocol';
 import type {
+  AlertEventsResponse,
+  AlertRule,
   AnomaliesResponse,
   FlowsChangesResponse,
   FlowsResponse,
@@ -453,6 +455,59 @@ export const mcpTools: readonly McpToolDef[] = [
         traceIds: insight.traceIds,
         createdBy: insight.createdBy,
         createdAt: insight.createdAt,
+      }));
+    },
+  },
+  {
+    name: 'create_alert_rule',
+    description:
+      'Create a standing watch on the system. Kinds: error-rate (config: threshold 0-1, ' +
+      'windowMinutes), latency-p95 (config: thresholdMs, windowMinutes), flow-missing (config: ' +
+      'signature — the exact flow signature that must keep running, windowMinutes), flow-drift ' +
+      '(config: windowHours), service-silent (config: service, windowMinutes). Use when the ' +
+      'user asks to be told/alerted/watched about something — e.g. "watch the checkout flow" → ' +
+      'flow-missing with that flow\'s signature.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'human-readable rule name' },
+        kind: {
+          type: 'string',
+          enum: ['error-rate', 'latency-p95', 'flow-missing', 'flow-drift', 'service-silent'],
+        },
+        config: { type: 'object', description: 'kind-specific settings, see the kind list' },
+      },
+      required: ['name', 'kind', 'config'],
+    },
+    handler: async (client, args) => {
+      const rule = await client.post<AlertRule>('/alerts/rules', {
+        name: args['name'],
+        kind: args['kind'],
+        config: args['config'] ?? {},
+      });
+      return { created: true, ruleId: rule.ruleId, name: rule.name, kind: rule.kind, config: rule.config };
+    },
+  },
+  {
+    name: 'list_alert_events',
+    description:
+      'Fired alerts, newest first: which rule fired, why (message + observed values) and when. ' +
+      'Check this for "did anything alert / is anything wrong right now?" before deep analysis.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'max events (1-100, default 20)' },
+      },
+    },
+    handler: async (client, args) => {
+      const limit = clampLimit(args['limit'], 20, 100);
+      const response = await client.get<AlertEventsResponse>(`/alerts/events?limit=${limit}`);
+      return response.items.map((event) => ({
+        firedAt: event.firedAt,
+        rule: sanitize(event.ruleName, 128),
+        kind: event.kind,
+        message: sanitize(event.message, 500),
+        acknowledged: event.acknowledged,
       }));
     },
   },

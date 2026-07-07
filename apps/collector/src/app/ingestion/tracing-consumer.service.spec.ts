@@ -83,6 +83,7 @@ function okStore(): TraceStore & { insertSpans: jest.Mock } {
         duplicates: 0,
       })
     ),
+    runRetention: jest.fn(async () => 0),
     ping: jest.fn(async () => undefined),
     close: jest.fn(async () => undefined),
   };

@@ -1,0 +1,92 @@
+<div class="kpis">
+  <div class="panel kpi">
+    <span class="value">{{ stats.value()?.traceCount ?? '—' }}</span>
+    <span class="label dim">traces · 24h</span>
+  </div>
+  <div class="panel kpi" [class.bad]="(stats.value()?.errorRate ?? 0) > 0.05">
+    <span class="value">{{ errorRatePct() }}</span>
+    <span class="label dim">error rate</span>
+  </div>
+  <div class="panel kpi">
+    <span class="value">{{ p95() }}</span>
+    <span class="label dim">p95 latency</span>
+  </div>
+  <div class="panel kpi">
+    <span class="value">{{ stats.value()?.serviceCount ?? '—' }}</span>
+    <span class="label dim">services</span>
+  </div>
+  <div class="panel kpi">
+    <span class="value">{{ stats.value()?.spanCount ?? '—' }}</span>
+    <span class="label dim">spans · 24h</span>
+  </div>
+</div>
+
+<section class="panel spark-panel">
+  <h3>Activity <span class="dim">(traces per 30m, errors in red)</span></h3>
+  @if (sparkPoints().length > 1) {
+    <svg [attr.viewBox]="'0 0 ' + sparkWidth + ' ' + sparkHeight" preserveAspectRatio="none" class="spark">
+      <polyline [attr.points]="sparkLine()" class="line" />
+      @for (p of sparkPoints(); track p.x) {
+        <line
+          [attr.x1]="p.x"
+          [attr.x2]="p.x"
+          [attr.y1]="sparkHeight - 2"
+          [attr.y2]="p.errorY"
+          class="err"
+        />
+      }
+    </svg>
+  } @else {
+    <div class="dim quiet">no traffic in the window yet — fire a request through the mesh</div>
+  }
+</section>
+
+<div class="columns">
+  <section class="panel column">
+    <h3><a routerLink="/alerts">Alerts</a></h3>
+    @if (openAlerts().length === 0) {
+      <div class="dim quiet">no unacknowledged alerts</div>
+    } @else {
+      @for (event of openAlerts(); track event.eventId) {
+        <div class="row-line">
+          <span class="badge error">{{ event.kind }}</span>
+          <span class="grow">{{ event.ruleName }} — <span class="dim">{{ event.message }}</span></span>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="panel column">
+    <h3><a routerLink="/flows">Flow drift · 24h</a></h3>
+    @if (changes().length === 0) {
+      <div class="dim quiet">no business-flow drift</div>
+    } @else {
+      @for (change of changes(); track change.signature + change.kind) {
+        <div class="row-line">
+          <span
+            class="badge"
+            [class.ok]="change.kind === 'added'"
+            [class.error]="change.kind === 'removed'"
+          >{{ change.kind }}</span>
+          <span class="grow mono sig">{{ change.signature }}</span>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="panel column">
+    <h3><a routerLink="/flows">Anomalies</a></h3>
+    @if (anomalyItems().length === 0) {
+      <div class="dim quiet">nothing anomalous in the sample</div>
+    } @else {
+      @for (anomaly of anomalyItems(); track anomaly.subject + anomaly.kind) {
+        <div class="row-line">
+          <span class="badge" [class.error]="anomaly.severity !== 'info'" [class.ok]="anomaly.severity === 'info'">
+            {{ anomaly.severity }}
+          </span>
+          <span class="grow"><span class="mono">{{ anomaly.subject }}</span> <span class="dim">{{ anomaly.detail }}</span></span>
+        </div>
+      }
+    }
+  </section>
+</div>

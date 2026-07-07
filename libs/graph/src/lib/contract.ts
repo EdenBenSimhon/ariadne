@@ -91,6 +91,59 @@ export interface InsightsResponse {
   readonly items: readonly Insight[];
 }
 
+/** Alerting (`/api/alerts/*`) — rules watch the system, events record breaches. */
+export type AlertRuleKind =
+  | 'error-rate'
+  | 'latency-p95'
+  | 'flow-missing'
+  | 'flow-drift'
+  | 'service-silent';
+
+export interface AlertRule {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly kind: AlertRuleKind;
+  readonly enabled: boolean;
+  readonly config: Readonly<Record<string, string | number>>;
+  readonly webhookUrl: string | null;
+  readonly lastState: 'ok' | 'breach';
+  readonly createdAt: string;
+}
+
+export interface AlertEvent {
+  readonly eventId: string;
+  readonly ruleId: string;
+  readonly ruleName: string;
+  readonly kind: string;
+  readonly message: string;
+  readonly context: Readonly<Record<string, string | number>>;
+  readonly firedAt: string;
+  readonly acknowledged: boolean;
+}
+
+export interface AlertRulesResponse {
+  readonly items: readonly AlertRule[];
+}
+
+export interface AlertEventsResponse {
+  readonly items: readonly AlertEvent[];
+}
+
+/** `/api/stats/timeseries` — bucketed activity for dashboards. */
+export interface StatsBucket {
+  readonly bucketStart: string;
+  readonly traceCount: number;
+  readonly errorTraceCount: number;
+  readonly p95DurationMs: number | null;
+}
+
+export interface StatsTimeseriesResponse {
+  readonly bucketMinutes: number;
+  readonly from: string;
+  readonly to: string;
+  readonly buckets: readonly StatsBucket[];
+}
+
 export interface StatsSummary {
   readonly traceCount: number;
   readonly errorTraceCount: number;

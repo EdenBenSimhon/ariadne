@@ -25,6 +25,8 @@ const collectorConfigSchema = z.object({
   dbRetryAttempts: z.number().int().min(1).max(20),
   fromBeginning: z.boolean(),
   port: z.number().int().min(0).max(65_535),
+  /** Days of span/trace history to keep; 0 disables the retention sweep. */
+  retentionDays: z.union([z.literal(0), z.number().int().min(7).max(3_650)]),
 });
 
 export type CollectorConfig = z.infer<typeof collectorConfigSchema>;
@@ -63,5 +65,6 @@ export function loadCollectorConfig(env: NodeJS.ProcessEnv = process.env): Colle
     dbRetryAttempts: intFromEnv(env['COLLECTOR_DB_RETRY_ATTEMPTS'], 5),
     fromBeginning: boolFromEnv(env['COLLECTOR_FROM_BEGINNING'], true),
     port: intFromEnv(env['PORT'], 3001),
+    retentionDays: intFromEnv(env['COLLECTOR_RETENTION_DAYS'], 30),
   });
 }

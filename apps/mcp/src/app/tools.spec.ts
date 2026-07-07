@@ -20,6 +20,7 @@ function span(id: number, parent: number | null, service: string, overrides: Par
     durationMs: 50,
     status: 'OK',
     error: null,
+    metadata: null,
     ...overrides,
   };
 }
@@ -242,5 +243,48 @@ describe('log tools (metadata + conclusions)', () => {
     expect((client.get as jest.Mock).mock.calls[0]?.[0]).toBe(
       '/flows/changes?windowHours=168&sampleSize=50'
     );
+  });
+
+  it('create_alert_rule posts the rule and echoes the created id', async () => {
+    const client = fakeClient(
+      {},
+      { '/alerts/rules': { ruleId: 'r-1', name: 'checkout watch', kind: 'flow-missing', config: {} } }
+    );
+    const result = (await tool('create_alert_rule').handler(client, {
+      name: 'checkout watch',
+      kind: 'flow-missing',
+      config: { signature: 'order -[orders.created]-> inventory' },
+    })) as { created: boolean; ruleId: string };
+
+    expect(result.created).toBe(true);
+    expect(result.ruleId).toBe('r-1');
+    const body = (client.post as jest.Mock).mock.calls[0]?.[1] as { kind: string };
+    expect(body.kind).toBe('flow-missing');
+  });
+
+  it('list_alert_events returns sanitized event summaries', async () => {
+    const client = fakeClient({
+      '/alerts/events': {
+        items: [
+          {
+            eventId: 'e-1',
+            ruleId: 'r-1',
+            ruleName: 'error watch',
+            kind: 'error-rate',
+            message: 'error rate 40.0% exceeds threshold 10.0%',
+            context: {},
+            firedAt: '2026-07-07T10:00:00.000Z',
+            acknowledged: false,
+          },
+        ],
+      },
+    });
+    const result = (await tool('list_alert_events').handler(client, {})) as Array<{
+      rule: string;
+      message: string;
+    }>;
+    expect(result).toHaveLength(1);
+    expect(result[0]?.rule).toBe('error watch');
+    expect(result[0]?.message).toContain('exceeds');
   });
 });

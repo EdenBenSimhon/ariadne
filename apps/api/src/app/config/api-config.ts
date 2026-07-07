@@ -27,6 +27,8 @@ const apiConfigSchema = z.object({
   corsOrigins: z.array(z.string().min(1)).min(1),
   /** Emit Strict-Transport-Security — enable once the API sits behind TLS. */
   enableHsts: z.boolean(),
+  /** Alert-rule evaluation interval (ms); 0 disables the evaluator (tests). */
+  alertEvalMs: z.number().int().min(0).max(3_600_000),
 });
 
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
@@ -74,5 +76,6 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     rateLimitPerMinute: intFromEnv(env['API_RATE_LIMIT_PER_MINUTE'], 600),
     corsOrigins: (env['API_CORS_ORIGINS'] ?? '*').split(',').map((origin) => origin.trim()),
     enableHsts: boolFromEnv(env['API_ENABLE_HSTS'], false),
+    alertEvalMs: intFromEnv(env['API_ALERT_EVAL_MS'], 30_000),
   });
 }

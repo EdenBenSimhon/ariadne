@@ -4,6 +4,11 @@
  * Responses are trusted server output; validation lives server-side (B3).
  */
 export type {
+  AlertEvent,
+  AlertEventsResponse,
+  AlertRule,
+  AlertRuleKind,
+  AlertRulesResponse,
   AnomaliesResponse,
   Anomaly,
   BusinessFlow,
@@ -22,7 +27,9 @@ export type {
   RecentActivityResponse,
   TraceLiveEvent,
   Paginated,
+  StatsBucket,
   StatsSummary,
+  StatsTimeseriesResponse,
   TopologyEdge,
   TopologyGraph,
   TopologyNode,

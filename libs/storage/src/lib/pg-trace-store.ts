@@ -90,6 +90,14 @@ export class PgTraceStore implements TraceStore {
     });
   }
 
+  async runRetention(keepDays: number): Promise<number> {
+    const result = await this.pool.query<{ eventtracer_retention: number }>(
+      'SELECT eventtracer_retention($1)',
+      [Math.floor(keepDays)]
+    );
+    return Number(result.rows[0]?.eventtracer_retention ?? 0);
+  }
+
   async ping(): Promise<void> {
     await this.db.execute(sql`SELECT 1`);
   }

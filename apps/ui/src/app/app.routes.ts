@@ -1,7 +1,16 @@
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-  { path: '', pathMatch: 'full', redirectTo: 'traces' },
+  { path: '', pathMatch: 'full', redirectTo: 'overview' },
+  {
+    path: 'overview',
+    loadComponent: () =>
+      import('./features/overview/overview-page').then((m) => m.OverviewPage),
+  },
+  {
+    path: 'alerts',
+    loadComponent: () => import('./features/alerts/alerts-page').then((m) => m.AlertsPage),
+  },
   {
     path: 'traces',
     loadComponent: () => import('./features/traces/traces-page').then((m) => m.TracesPage),

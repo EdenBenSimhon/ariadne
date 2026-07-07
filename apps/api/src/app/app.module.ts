@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { AlertsModule } from './alerts/alerts.module';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { ApiConfigModule } from './config/config.module';
 import { FlowsModule } from './flows/flows.module';
@@ -20,6 +21,7 @@ import { TracesModule } from './traces/traces.module';
     SpansModule,
     TopologyModule,
     FlowsModule,
+    AlertsModule,
     InsightsModule,
     StatsModule,
     LiveModule,

@@ -5,17 +5,29 @@ See `docs/RUNBOOK.md` for how to run it, `docs/TUTORIAL.md` for the guided
 walkthrough, `docs/IMPLEMENTATION.md` for what is built, and `CLAUDE.md` for
 project rules.
 
-> Requires **Node 22** (`nvm use 22` — Node 18 is too old for Angular 21).
-
-## Quick start (scripts)
-
-One command per path — each handles `nvm use 22` for you:
+## Quick start
 
 ```bash
-./scripts/verify.sh    # Path A (no Docker): build + test all + MCP demos
-./scripts/demo.sh      # just the MCP flow-recognition demo + stdio probe
-./scripts/up.sh        # Path B (needs Docker): infra + migrate + services + smoke order
-./scripts/down.sh      # tear the Path B stack back down
+git clone <repo> && cd ariadne
+npm run setup     # installs Node 22 (via nvm), dependencies, builds everything
+npm run up        # full live mesh (needs Docker): infra + migrations + services + agent + smoke order
+# → open http://localhost:4200
+npm run down      # stop everything
+```
+
+No Docker? `npm run demo` shows the flow-recognition engine on mock traces in
+~30s, and the UI runs backend-free with `USE_MOCK_API = true`. The Ask agent
+additionally needs Ollama (`brew install ollama && ollama pull llama3.1:8b`) —
+`npm run up` detects it and starts the agent automatically when present.
+
+All scripts handle `nvm use 22` for you (Node 18 is too old for Angular 21):
+
+```bash
+npm run setup     # one-command install (idempotent)
+npm run verify    # Path A (no Docker): build + test all + MCP demos
+npm run demo      # just the MCP flow-recognition demo + stdio probe
+npm run up        # Path B (needs Docker): everything, including the agent
+npm run down      # tear the Path B stack back down
 ```
 
 ## Path A — no Docker

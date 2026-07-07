@@ -1,10 +1,14 @@
 import type { TenantId } from '@ariadne/protocol';
-import type { StatsSummary } from '@ariadne/graph';
+import type { StatsSummary, StatsTimeseriesResponse } from '@ariadne/graph';
 import type { TraceReader } from '@ariadne/storage';
 import { Inject, Injectable } from '@nestjs/common';
 import { API_CONFIG, type ApiConfig } from '../config/api-config';
 import { resolveWindow, type WindowQuery } from '../common/query';
 import { TRACE_READER } from '../storage/storage.module';
+
+export interface TimeseriesQuery extends WindowQuery {
+  readonly bucketMinutes: number;
+}
 
 @Injectable()
 export class StatsService {
@@ -30,6 +34,25 @@ export class StatsService {
       p95DurationMs: row.p95DurationMs,
       from: window.from.toISOString(),
       to: window.to.toISOString(),
+    };
+  }
+
+  async timeseries(tenantId: TenantId, query: TimeseriesQuery): Promise<StatsTimeseriesResponse> {
+    const window = resolveWindow(query, {
+      lookbackMs: this.config.defaultLookbackHours * 3_600_000,
+      maxWindowMs: this.config.maxWindowDays * 86_400_000,
+    });
+    const rows = await this.reader.getStatsTimeseries(tenantId, window, query.bucketMinutes);
+    return {
+      bucketMinutes: query.bucketMinutes,
+      from: window.from.toISOString(),
+      to: window.to.toISOString(),
+      buckets: rows.map((row) => ({
+        bucketStart: row.bucketStart.toISOString(),
+        traceCount: row.traceCount,
+        errorTraceCount: row.errorTraceCount,
+        p95DurationMs: row.p95DurationMs,
+      })),
     };
   }
 }

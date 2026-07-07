@@ -17,6 +17,16 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.brand')?.textContent).toContain('EventTracer');
     const links = [...compiled.querySelectorAll('nav a')].map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Traces', 'Logs', 'Live', 'Flows', 'Topology', 'Insights', 'Ask']);
+    expect(links).toEqual([
+      'Overview',
+      'Traces',
+      'Logs',
+      'Live',
+      'Flows',
+      'Topology',
+      'Alerts',
+      'Insights',
+      'Ask',
+    ]);
   });
 });

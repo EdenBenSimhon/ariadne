@@ -8,5 +8,6 @@ import { FlowsService } from './flows.service';
   imports: [ApiStorageModule, TopologyModule],
   controllers: [FlowsController],
   providers: [FlowsService],
+  exports: [FlowsService],
 })
 export class FlowsModule {}

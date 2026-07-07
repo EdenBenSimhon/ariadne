@@ -15,6 +15,13 @@ export interface InsertResult {
 export interface TraceStore {
   /** Idempotent, order-independent batch write of validated span events. */
   insertSpans(spans: readonly SpanEvent[]): Promise<InsertResult>;
+  /**
+   * Drop span partitions and delete trace/alert rows older than keepDays.
+   * Runs via the SECURITY DEFINER `eventtracer_retention` function (migration
+   * 0004) — the collector role has EXECUTE on it but owns no table.
+   * Returns the number of partitions dropped.
+   */
+  runRetention(keepDays: number): Promise<number>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }

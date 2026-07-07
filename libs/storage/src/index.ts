@@ -1,5 +1,7 @@
+export * from './lib/alert-store';
 export * from './lib/db';
 export * from './lib/insight-store';
+export * from './lib/schema/alerts';
 export * from './lib/pg-trace-store';
 export * from './lib/schema/insights';
 export * from './lib/schema/spans';

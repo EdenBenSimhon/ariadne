@@ -1,10 +1,17 @@
-import { createStorageDb, InsightStore, TraceReader, type StorageDb } from '@ariadne/storage';
+import {
+  AlertStore,
+  createStorageDb,
+  InsightStore,
+  TraceReader,
+  type StorageDb,
+} from '@ariadne/storage';
 import { Inject, Injectable, Module, type OnApplicationShutdown } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { API_CONFIG, type ApiConfig } from '../config/api-config';
 
 export const TRACE_READER = Symbol('TRACE_READER');
 export const INSIGHT_STORE = Symbol('INSIGHT_STORE');
+export const ALERT_STORE = Symbol('ALERT_STORE');
 const STORAGE_HANDLE = Symbol('STORAGE_HANDLE');
 
 interface StorageHandle {
@@ -42,8 +49,13 @@ class ReaderLifecycle implements OnApplicationShutdown {
       useFactory: (storage: StorageHandle): InsightStore => new InsightStore(storage.db),
       inject: [STORAGE_HANDLE],
     },
+    {
+      provide: ALERT_STORE,
+      useFactory: (storage: StorageHandle): AlertStore => new AlertStore(storage.db),
+      inject: [STORAGE_HANDLE],
+    },
     ReaderLifecycle,
   ],
-  exports: [TRACE_READER, INSIGHT_STORE],
+  exports: [TRACE_READER, INSIGHT_STORE, ALERT_STORE],
 })
 export class ApiStorageModule {}

@@ -1,10 +1,11 @@
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { alertEvents, alertRules } from './schema/alerts';
 import { insights } from './schema/insights';
 import { spans } from './schema/spans';
 import { traces } from './schema/traces';
 
-export const storageSchema = { spans, traces, insights } as const;
+export const storageSchema = { spans, traces, insights, alertRules, alertEvents } as const;
 export type StorageDb = NodePgDatabase<typeof storageSchema>;
 
 export interface StorageDbOptions {

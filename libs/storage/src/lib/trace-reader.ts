@@ -56,6 +56,14 @@ export interface StatsRow {
   readonly serviceCount: number;
 }
 
+/** One time bucket of trace activity — dashboard sparklines + alert baselines. */
+export interface StatsBucketRow {
+  readonly bucketStart: Date;
+  readonly traceCount: number;
+  readonly errorTraceCount: number;
+  readonly p95DurationMs: number | null;
+}
+
 const toNullableNumber = (value: unknown): number | null =>
   value === null || value === undefined ? null : Number(value);
 
@@ -265,6 +273,36 @@ export class TraceReader {
       spanCount: spanStats?.spanCount ?? 0,
       serviceCount: spanStats?.serviceCount ?? 0,
     };
+  }
+
+  /** Bucketed trace counts / error counts / p95 over the window (sparklines). */
+  async getStatsTimeseries(
+    tenantId: TenantId,
+    window: TimeWindow,
+    bucketMinutes: number
+  ): Promise<StatsBucketRow[]> {
+    // The bucket width is inlined (validated integer) so the SELECT and
+    // GROUP BY expressions are textually identical — with bind params
+    // Postgres treats them as different expressions and rejects the query.
+    const bucketSeconds = sql.raw(String(Math.max(60, Math.floor(bucketMinutes) * 60)));
+    const bucketExpr = sql`to_timestamp(floor(extract(epoch from ${traces.startTime}) / ${bucketSeconds}) * ${bucketSeconds})`;
+    return this.db
+      .select({
+        bucketStart: sql<Date>`${bucketExpr}`.mapWith((v: unknown) => new Date(v as string)),
+        traceCount: sql<number>`count(*)`.mapWith(Number),
+        errorTraceCount: sql<number>`count(*) filter (where ${traces.hasError})`.mapWith(Number),
+        p95DurationMs: sql<number | null>`percentile_cont(0.95) within group (order by ${traces.durationMs})`.mapWith(toNullableNumber),
+      })
+      .from(traces)
+      .where(
+        and(
+          eq(traces.tenantId, tenantId),
+          gte(traces.startTime, window.from),
+          lte(traces.startTime, window.to)
+        )
+      )
+      .groupBy(bucketExpr)
+      .orderBy(bucketExpr);
   }
 
   async ping(): Promise<void> {

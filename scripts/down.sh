@@ -16,7 +16,7 @@ else
 fi
 
 # Belt-and-suspenders: free the well-known dev ports if anything lingers.
-for port in 4200 4001 3000 3001; do
+for port in 4200 4001 3000 3001 3300; do
   lsof -ti "tcp:$port" 2>/dev/null | xargs kill -9 2>/dev/null || true
 done
 

@@ -1,10 +1,17 @@
 {
   "name": "ariadne-main",
   "version": "1.0.0",
-  "description": "Transport-agnostic distributed tracing for event-driven and API-based systems — one trace across Kafka, RabbitMQ, and REST, with zero tracing code in your services.",
+  "description": "Transport-agnostic distributed tracing for event-driven and API-based systems \u2014 one trace across Kafka, RabbitMQ, and REST, with zero tracing code in your services.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup": "./scripts/setup.sh",
+    "demo": "./scripts/demo.sh",
+    "verify": "./scripts/verify.sh",
+    "up": "./scripts/up.sh",
+    "down": "./scripts/down.sh",
+    "start": "./scripts/up.sh",
+    "stop": "./scripts/down.sh",
+    "test": "nx run-many -t test --all"
   },
   "keywords": [],
   "author": "",
@@ -83,7 +90,6 @@
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
-    "docker": "^1.0.0",
     "drizzle-orm": "^0.45.2",
     "kafkajs": "^2.2.4",
     "pg": "^8.22.0",

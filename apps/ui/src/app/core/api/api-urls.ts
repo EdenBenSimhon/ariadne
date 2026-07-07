@@ -102,3 +102,23 @@ export function insightsUrl(limit = 50): string {
 export function insightUrl(insightId: string): string {
   return `/api/insights/${encodeURIComponent(insightId)}`;
 }
+
+export function statsTimeseriesUrl(bucketMinutes = 30): string {
+  return `/api/stats/timeseries?bucketMinutes=${bucketMinutes}`;
+}
+
+export function alertRulesUrl(): string {
+  return '/api/alerts/rules';
+}
+
+export function alertRuleUrl(ruleId: string): string {
+  return `/api/alerts/rules/${encodeURIComponent(ruleId)}`;
+}
+
+export function alertEventsUrl(limit = 50): string {
+  return `/api/alerts/events?limit=${limit}`;
+}
+
+export function alertEventAckUrl(eventId: string): string {
+  return `/api/alerts/events/${encodeURIComponent(eventId)}/ack`;
+}

@@ -1,0 +1,104 @@
+<section class="panel create">
+  <h3>New alert rule</h3>
+  <div class="form">
+    <input
+      type="text"
+      placeholder="rule name…"
+      #ruleName
+      [value]="name()"
+      (input)="name.set(ruleName.value)"
+    />
+    <select [value]="kind()" (change)="setKind($any($event.target).value)">
+      @for (option of kinds; track option.kind) {
+        <option [value]="option.kind">{{ option.label }}</option>
+      }
+    </select>
+
+    @switch (kind()) {
+      @case ('error-rate') {
+        <input type="text" class="short" placeholder="threshold 0-1" #th [value]="threshold()" (input)="threshold.set(th.value)" />
+        <input type="text" class="short" placeholder="window min" #wm [value]="windowMinutes()" (input)="windowMinutes.set(wm.value)" />
+      }
+      @case ('latency-p95') {
+        <input type="text" class="short" placeholder="threshold ms" #tm [value]="thresholdMs()" (input)="thresholdMs.set(tm.value)" />
+        <input type="text" class="short" placeholder="window min" #wm2 [value]="windowMinutes()" (input)="windowMinutes.set(wm2.value)" />
+      }
+      @case ('flow-missing') {
+        <input type="text" class="grow" placeholder="flow signature (copy from the Flows page)" #sig [value]="signature()" (input)="signature.set(sig.value)" />
+      }
+      @case ('flow-drift') {
+        <input type="text" class="short" placeholder="window hours" #wh [value]="windowHours()" (input)="windowHours.set(wh.value)" />
+      }
+      @case ('service-silent') {
+        <input type="text" class="short" placeholder="service name" #svc [value]="service()" (input)="service.set(svc.value)" />
+        <input type="text" class="short" placeholder="window min" #wm3 [value]="windowMinutes()" (input)="windowMinutes.set(wm3.value)" />
+      }
+    }
+
+    <input type="text" class="grow" placeholder="webhook URL (optional, Slack-compatible)" #wh2 [value]="webhookUrl()" (input)="webhookUrl.set(wh2.value)" />
+    <button class="btn" [disabled]="saving()" (click)="create()">create</button>
+  </div>
+  <div class="hint dim">
+    @for (option of kinds; track option.kind) {
+      @if (option.kind === kind()) { {{ option.hint }} }
+    }
+  </div>
+  @if (formError()) {
+    <div class="form-error">{{ formError() }}</div>
+  }
+</section>
+
+<section class="panel rules">
+  <h3>Rules</h3>
+  @if (rules.isLoading()) {
+    <div class="state-note">loading rules…</div>
+  } @else if (ruleItems().length === 0) {
+    <div class="dim quiet">no rules yet — the agent can also create them ("watch the checkout flow")</div>
+  } @else {
+    <table class="et-table">
+      <thead>
+        <tr><th>Name</th><th>Kind</th><th>Config</th><th>State</th><th>Enabled</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (rule of ruleItems(); track rule.ruleId) {
+          <tr>
+            <td>{{ rule.name }}</td>
+            <td><span class="mono">{{ rule.kind }}</span></td>
+            <td class="mono dim config">{{ configSummary(rule) }}</td>
+            <td>
+              <span class="badge" [class.error]="rule.lastState === 'breach'" [class.ok]="rule.lastState === 'ok'">
+                {{ rule.lastState }}
+              </span>
+            </td>
+            <td>
+              <button class="btn small" (click)="toggle(rule)">{{ rule.enabled ? 'on' : 'off' }}</button>
+            </td>
+            <td><button class="btn small" (click)="remove(rule.ruleId)">delete</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+
+<section class="panel events">
+  <h3>Fired alerts</h3>
+  @if (events.isLoading()) {
+    <div class="state-note">loading events…</div>
+  } @else if (eventItems().length === 0) {
+    <div class="dim quiet">nothing has fired</div>
+  } @else {
+    @for (event of eventItems(); track event.eventId) {
+      <div class="event" [class.acked]="event.acknowledged">
+        <span class="time mono dim">{{ formatTime(event.firedAt) }}</span>
+        <span class="badge error">{{ event.kind }}</span>
+        <span class="grow"><b>{{ event.ruleName }}</b> — {{ event.message }}</span>
+        @if (!event.acknowledged) {
+          <button class="btn small" (click)="ack(event.eventId)">ack</button>
+        } @else {
+          <span class="dim">acked</span>
+        }
+      </div>
+    }
+  }
+</section>

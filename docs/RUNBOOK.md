@@ -8,6 +8,17 @@ instrumentation guide, see [`TUTORIAL.md`](./TUTORIAL.md).
 There are two paths. **Path A needs no infrastructure** and is verified to work
 as-is. **Path B** stands up the full live mesh and needs Docker.
 
+## TL;DR
+
+```bash
+npm run setup   # install: Node 22 (nvm) + dependencies + full build + preflight
+npm run up      # run: infra + migrate + collector + api + demo-mesh + ui + agent
+npm run down    # stop everything
+```
+
+`npm run up` starts the AI agent automatically when Ollama is reachable on
+:11434 (skips it with instructions otherwise).
+
 ## One-command scripts (`scripts/`)
 
 Everything below is wrapped in scripts that also handle `nvm use 22` for you:
@@ -123,7 +134,7 @@ activity."*
 | Service | Port | Endpoint |
 |---|---|---|
 | UI | 4200 | http://localhost:4200 |
-| API | 3000 | `/api/traces`, `/spans` (log search), `/services`, `/topology`, `/stats`, `/flows`, `/flows/changes` (drift), `/anomalies`, `/insights`, `/events` (SSE), `/events/recent`, `/healthz` |
+| API | 3000 | `/api/traces`, `/spans` (log search), `/services`, `/topology`, `/stats`, `/stats/timeseries`, `/flows`, `/flows/changes` (drift), `/anomalies`, `/insights`, `/alerts/rules`, `/alerts/events`, `/events` (SSE), `/events/recent`, `/healthz` |
 | UI **Live** tab | 4200 | http://localhost:4200/live — realtime SSE feed |
 | Collector | 3001 | `/healthz` (kafka/db status + ingestion counters) |
 | demo-mesh (order-service) | 4001 | `POST /orders` |
@@ -139,6 +150,8 @@ activity."*
 | `API_RATE_LIMIT_PER_MINUTE` | requests per tenant/IP per minute (default 600, `0` disables) |
 | `API_CORS_ORIGINS` | comma-separated browser origin allowlist (default `*`) |
 | `API_ENABLE_HSTS` | `true` once the API is behind TLS |
+| `API_ALERT_EVAL_MS` | alert-rule evaluation interval (default 30000, `0` disables) |
+| `COLLECTOR_RETENTION_DAYS` | span/trace history to keep — daily sweep drops old span partitions via the owner-defined `eventtracer_retention()` (default 30, `0` disables, min 7) |
 
 Always on: security headers (nosniff, frame-deny, CSP `default-src 'none'`),
 `x-request-id` on every response + structured access log, opaque 500s (stack
