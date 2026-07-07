@@ -15,7 +15,7 @@
 | 6 — RabbitMQ + REST adapters | `libs/transport-rabbitmq`, `libs/transport-rest` | ✅ Done (Python/Java SDKs + OIDC auth deferred) |
 | 7 — Intelligence (seed) | `apps/mcp` — MCP server over the distilled graph, `discover_business_flows` path-signature clustering | ✅ Seeded |
 
-**Verification gate (all green):** `npx nx run-many -t lint,test,build --all` — 89 unit tests across 4 libraries, including an end-to-end trace-chain acceptance test.
+**Verification gate (all green):** `npx nx run-many -t lint,test,build --all` — 14 projects, 248 unit tests (verified fresh with `--skip-nx-cache`), including an end-to-end trace-chain acceptance test. The detailed test map below covers the four core libraries (89 tests) from Phase 2; the remaining projects were added in Phases 3–7.
 
 ---
 

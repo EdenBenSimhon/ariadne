@@ -3,7 +3,7 @@
 Every phase from the spec (§12) with its concrete steps and where each landed.
 ✅ done · 🔜 deferred (documented seam) · ➖ out of MVP scope by design.
 
-**Verification:** `npx nx run-many -t lint,test,build --all` — 14 projects, 262 tests, all green (branch `feature/phase6-7-completion`).
+**Verification:** `npx nx run-many -t lint,test,build --all` — 14 projects, 248 tests, all green (verified fresh with `--skip-nx-cache`, branch `dev`).
 
 ---
 

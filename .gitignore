@@ -32,3 +32,6 @@ yarn-error.log*
 coverage
 
 .angular
+
+# local run scripts (background pids/logs)
+.run/
