@@ -38,7 +38,10 @@ export const DEFAULT_DAG_LAYOUT: DagLayoutOptions = {
   nodeH: 56,
 };
 
-export function layoutDag(dag: TraceDag, opts: DagLayoutOptions = DEFAULT_DAG_LAYOUT): PositionedDag {
+export function layoutDag(
+  dag: TraceDag,
+  opts: DagLayoutOptions = DEFAULT_DAG_LAYOUT,
+): PositionedDag {
   const order: TraceDagNode[] = [];
   const visited = new Set<string>();
   const visit = (spanId: string): void => {

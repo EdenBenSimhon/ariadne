@@ -99,6 +99,7 @@ export function buildTraceDag(traceId: TraceId, spans: readonly GraphSpan[]): Tr
       error: span.error,
       depth: depth.get(span.spanId) ?? 0,
       orphaned: orphanSet.has(span.spanId),
+      metadata: span.metadata ?? null,
     };
   }
 

@@ -41,6 +41,14 @@ const hop = (
   durationMs: 40 + n * 15,
   status: failed ? 'ERROR' : 'OK',
   error: failed ? 'Error: card declined' : null,
+  metadata: {
+    orderId: 'ord-1042',
+    customerId: 'cust-7',
+    productId: 'widget-blue',
+    quantity: 2,
+    ...(channel.startsWith('payment') ? { amount: 200 } : {}),
+    ...(failed ? { reason: 'card declined' } : {}),
+  },
 });
 
 export const FIXTURE_SPANS: readonly GraphSpan[] = [
