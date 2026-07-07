@@ -52,11 +52,16 @@ function detailFixture(withError = false): TraceDetail {
   };
 }
 
-function fakeClient(routes: Record<string, unknown>): ApiClient {
+function fakeClient(routes: Record<string, unknown>, postRoutes: Record<string, unknown> = {}): ApiClient {
   return {
     get: jest.fn(async (path: string) => {
       const match = Object.entries(routes).find(([key]) => path.startsWith(key));
       if (!match) throw new Error(`unexpected path ${path}`);
+      return match[1];
+    }),
+    post: jest.fn(async (path: string) => {
+      const match = Object.entries(postRoutes).find(([key]) => path.startsWith(key));
+      if (!match) throw new Error(`unexpected POST path ${path}`);
       return match[1];
     }),
   } as unknown as ApiClient;
@@ -128,5 +133,114 @@ describe('mcp tools', () => {
 
     expect(result.anomalies[0]?.kind).toBe('failing-flow');
     expect((client.get as jest.Mock).mock.calls[0]?.[0]).toBe('/anomalies?sampleSize=50');
+  });
+});
+
+const logEntry = (overrides: Record<string, unknown> = {}) => ({
+  traceId,
+  spanId: '1'.repeat(16),
+  serviceName: 'payment',
+  spanKind: 'CONSUMER',
+  transport: 'kafka',
+  channel: 'orders.created',
+  operationName: 'chargeCard',
+  startTime: '2026-07-07T10:00:00.000Z',
+  durationMs: 40,
+  status: 'OK',
+  error: null,
+  metadata: { orderId: 'o-1', amount: 99 },
+  ...overrides,
+});
+
+describe('log tools (metadata + conclusions)', () => {
+  it('search_logs forwards filters and distills log lines (metadata sanitized)', async () => {
+    const client = fakeClient({
+      '/spans': {
+        items: [logEntry({ metadata: { note: 'ok\u0007beep', amount: 99 } })],
+        nextCursor: null,
+      },
+    });
+    const result = (await tool('search_logs').handler(client, {
+      q: 'charge',
+      service: 'payment',
+      status: 'error',
+      limit: 10,
+    })) as { count: number; logs: Array<{ metadata: Record<string, string> }> };
+
+    const calledPath = (client.get as jest.Mock).mock.calls[0]?.[0] as string;
+    expect(calledPath).toContain('/spans?limit=10');
+    expect(calledPath).toContain('q=charge');
+    expect(calledPath).toContain('service=payment');
+    expect(calledPath).toContain('status=ERROR');
+    expect(calledPath).toContain('from=');
+    expect(result.count).toBe(1);
+    expect(result.logs[0]?.metadata?.['note']).toBe('ok beep'); // control char blanked
+    expect(result.logs[0]?.metadata?.['amount']).toBe('99'); // values stringified
+  });
+
+  it('get_span_metadata returns per-hop sanitized metadata only', async () => {
+    const client = fakeClient({
+      [`/traces/${traceId}/spans`]: { items: [logEntry()] },
+    });
+    const result = (await tool('get_span_metadata').handler(client, { traceId })) as Array<{
+      metadata: Record<string, string> | null;
+    }>;
+    expect(result).toHaveLength(1);
+    expect(result[0]?.metadata).toEqual({ orderId: 'o-1', amount: '99' });
+    expect(JSON.stringify(result)).not.toContain('spanId');
+  });
+
+  it('error_breakdown clusters errors by normalized pattern', async () => {
+    const client = fakeClient({
+      '/spans': {
+        items: [
+          logEntry({ status: 'ERROR', error: 'charge 111 declined' }),
+          logEntry({ status: 'ERROR', error: 'charge 222 declined' }),
+          logEntry({ status: 'ERROR', error: 'timeout', serviceName: 'billing' }),
+        ],
+        nextCursor: null,
+      },
+    });
+    const result = (await tool('error_breakdown').handler(client, {})) as {
+      patterns: Array<{ pattern: string; count: number }>;
+    };
+    expect(result.patterns).toHaveLength(2);
+    expect(result.patterns[0]?.pattern).toBe('charge # declined');
+    expect(result.patterns[0]?.count).toBe(2);
+  });
+
+  it('compare_traces reports hop and duration differences', async () => {
+    const client = fakeClient({ '/traces/': detailFixture() });
+    const result = (await tool('compare_traces').handler(client, {
+      traceIdA: traceId,
+      traceIdB: traceId,
+    })) as { sameFlow: boolean; durationDeltaMs: number };
+    expect(result.sameFlow).toBe(true);
+    expect(result.durationDeltaMs).toBe(0);
+  });
+
+  it('save_insight validates trace ids and posts as the agent', async () => {
+    const client = fakeClient({}, { '/insights': { insightId: 'uuid-1', title: 'Checkout drifted' } });
+    const result = (await tool('save_insight').handler(client, {
+      kind: 'flow-change',
+      title: 'Checkout drifted',
+      body: 'payment hop disappeared',
+      traceIds: [traceId, 'DROP TABLE'],
+    })) as { saved: boolean };
+
+    expect(result.saved).toBe(true);
+    const body = (client.post as jest.Mock).mock.calls[0]?.[1] as { traceIds: string[]; createdBy: string };
+    expect(body.traceIds).toEqual([traceId]); // malformed id dropped
+    expect(body.createdBy).toBe('agent');
+  });
+
+  it('compare_flow_windows clamps its windows', async () => {
+    const client = fakeClient({
+      '/flows/changes': { base: {}, head: {}, changes: [], unchangedCount: 0 },
+    });
+    await tool('compare_flow_windows').handler(client, { windowHours: 9_999 });
+    expect((client.get as jest.Mock).mock.calls[0]?.[0]).toBe(
+      '/flows/changes?windowHours=168&sampleSize=50'
+    );
   });
 });

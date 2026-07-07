@@ -123,13 +123,28 @@ activity."*
 | Service | Port | Endpoint |
 |---|---|---|
 | UI | 4200 | http://localhost:4200 |
-| API | 3000 | `/api/traces`, `/topology`, `/stats`, `/flows`, `/anomalies`, `/events` (SSE), `/events/recent`, `/healthz` |
+| API | 3000 | `/api/traces`, `/spans` (log search), `/services`, `/topology`, `/stats`, `/flows`, `/flows/changes` (drift), `/anomalies`, `/insights`, `/events` (SSE), `/events/recent`, `/healthz` |
 | UI **Live** tab | 4200 | http://localhost:4200/live — realtime SSE feed |
 | Collector | 3001 | `/healthz` (kafka/db status + ingestion counters) |
 | demo-mesh (order-service) | 4001 | `POST /orders` |
 | Kafka | 9092 | broker (KRaft) |
 | RabbitMQ | 5672 / 15672 | AMQP / management UI |
 | Postgres | 5432 | `eventtracer` db |
+
+## Production hardening (env vars, all optional in dev)
+
+| Variable | Effect |
+|---|---|
+| `API_KEYS` | `tenant:key,tenant2:key2` — enables per-tenant API-key auth (`x-api-key` header, `?apiKey=` for SSE). Unset = auth disabled (dev). Keys must be ≥16 chars. |
+| `API_RATE_LIMIT_PER_MINUTE` | requests per tenant/IP per minute (default 600, `0` disables) |
+| `API_CORS_ORIGINS` | comma-separated browser origin allowlist (default `*`) |
+| `API_ENABLE_HSTS` | `true` once the API is behind TLS |
+
+Always on: security headers (nosniff, frame-deny, CSP `default-src 'none'`),
+`x-request-id` on every response + structured access log, opaque 500s (stack
+traces never leave the server). Migration `0003` adds the `insights` table
+(the API's only writable table — trace data stays immutable) plus jsonb/trgm
+search indexes.
 
 ## Troubleshooting
 

@@ -1,4 +1,4 @@
-import { traceIdSchema, type TraceId } from '@ariadne/protocol';
+import { spanIdSchema, traceIdSchema, type SpanId, type TraceId } from '@ariadne/protocol';
 import { BadRequestException } from '@nestjs/common';
 import { z } from 'zod';
 
@@ -40,6 +40,22 @@ export function decodeCursor(cursor: string): CursorPayload {
     throw new BadRequestException('invalid cursor');
   }
   return { startTime: new Date(startTimeMs), traceId: traceId.data };
+}
+
+/** Same opaque keyset shape as the trace cursor, keyed by span id. */
+export function encodeSpanCursor(startTime: Date, spanId: SpanId): string {
+  return Buffer.from(`${startTime.getTime()}:${spanId}`, 'utf8').toString('base64url');
+}
+
+export function decodeSpanCursor(cursor: string): { startTime: Date; spanId: SpanId } {
+  const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
+  const separator = decoded.indexOf(':');
+  const startTimeMs = separator > 0 ? Number(decoded.slice(0, separator)) : Number.NaN;
+  const spanId = spanIdSchema.safeParse(decoded.slice(separator + 1));
+  if (!Number.isSafeInteger(startTimeMs) || !spanId.success) {
+    throw new BadRequestException('invalid cursor');
+  }
+  return { startTime: new Date(startTimeMs), spanId: spanId.data };
 }
 
 export const windowQuerySchema = z.object({

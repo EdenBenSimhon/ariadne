@@ -1,0 +1,102 @@
+<div class="toolbar">
+  <input
+    class="search"
+    type="text"
+    placeholder="search operation, channel or error text…  (enter to run)"
+    #query
+    [value]="q()"
+    (keyup.enter)="applyQuery(query.value)"
+  />
+  <select [value]="service()" (change)="setService($any($event.target).value)">
+    <option value="">all services</option>
+    @for (name of serviceNames(); track name) {
+      <option [value]="name">{{ name }}</option>
+    }
+  </select>
+  <select [value]="status()" (change)="setStatus($any($event.target).value)">
+    <option value="">any status</option>
+    <option value="OK">OK</option>
+    <option value="ERROR">ERROR</option>
+  </select>
+  <select [value]="transport()" (change)="setTransport($any($event.target).value)">
+    <option value="">any transport</option>
+    <option value="kafka">kafka</option>
+    <option value="rabbitmq">rabbitmq</option>
+    <option value="rest">rest</option>
+  </select>
+  <select [value]="rangeMinutes()" (change)="setRange($any($event.target).value)">
+    @for (range of ranges; track range.minutes) {
+      <option [value]="range.minutes">{{ range.label }}</option>
+    }
+  </select>
+  <input
+    class="duration"
+    type="text"
+    placeholder="≥ ms"
+    #minDur
+    [value]="minDurationMs() ?? ''"
+    (keyup.enter)="setMinDuration(minDur.value)"
+  />
+</div>
+
+@if (logs.isLoading()) {
+  <div class="state-note">searching the span log…</div>
+} @else if (logs.error()) {
+  <div class="state-note">search failed — is the API running on :3000?</div>
+} @else if (items().length === 0) {
+  <div class="state-note">no log lines match these filters in this window</div>
+} @else {
+  <div class="summary dim">
+    {{ items().length }} log lines{{ nextCursor() !== null ? ' (more below)' : '' }} — click a
+    line for metadata
+  </div>
+  <ul class="feed panel">
+    @for (entry of items(); track entry.spanId + entry.startTime) {
+      <li>
+        <div
+          class="row"
+          role="button"
+          tabindex="0"
+          (click)="toggleRow(entry.spanId)"
+          (keyup.enter)="toggleRow(entry.spanId)"
+        >
+          <span class="time mono dim">{{ formatTime(entry.startTime) }}</span>
+          <span class="badge" [class.error]="entry.status === 'ERROR'" [class.ok]="entry.status === 'OK'">
+            {{ entry.status }}
+          </span>
+          <span class="service">
+            <span class="dot" [style.background]="serviceColor(entry.serviceName)"></span>
+            {{ entry.serviceName }}
+          </span>
+          <span class="channel mono dim">{{ entry.transport }}·{{ entry.channel }}</span>
+          <span class="operation mono">{{ entry.operationName }}</span>
+          <span class="duration mono">{{ formatDuration(entry.durationMs) }}</span>
+          <a class="trace mono" [routerLink]="['/traces', entry.traceId]" (click)="$event.stopPropagation()">
+            {{ shortId(entry.traceId) }}
+          </a>
+        </div>
+        @if (expanded().has(entry.spanId)) {
+          <div class="detail">
+            @if (entry.error) {
+              <div class="error-text mono">{{ entry.error }}</div>
+            }
+            @if (metadataEntries(entry).length > 0) {
+              <div class="meta">
+                @for (pair of metadataEntries(entry); track pair[0]) {
+                  <span class="meta-chip mono"><b>{{ pair[0] }}</b>={{ pair[1] }}</span>
+                }
+              </div>
+            } @else if (!entry.error) {
+              <div class="dim">no metadata on this span</div>
+            }
+            <div class="dim mono ids">span {{ entry.spanId }} · kind {{ entry.spanKind }}</div>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+  <div class="pager">
+    <button class="btn" [disabled]="!hasPrev()" (click)="prev()">← newer</button>
+    <button class="btn" [disabled]="nextCursor() === null" (click)="next()">older →</button>
+  </div>
+}

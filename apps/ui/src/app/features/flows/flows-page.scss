@@ -1,3 +1,68 @@
+.changes {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+
+  .changes-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    h3 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+  }
+
+  .quiet {
+    font-size: 13px;
+    padding: 4px 0;
+  }
+
+  .change {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 0;
+    font-size: 13px;
+
+    .signature {
+      font-size: 11px;
+    }
+
+    .reasons {
+      font-size: 12px;
+    }
+  }
+
+  .kind-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+
+    &[data-kind='added'] {
+      color: var(--ok);
+      border-color: var(--ok);
+    }
+
+    &[data-kind='removed'] {
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    &[data-kind='changed'] {
+      color: var(--warn);
+      border-color: var(--warn);
+    }
+  }
+}
+
 .anomalies {
   margin-bottom: 16px;
   padding: 12px 16px;

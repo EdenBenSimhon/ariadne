@@ -1,8 +1,16 @@
-import { createStorageDb, TraceReader } from '@ariadne/storage';
+import { createStorageDb, InsightStore, TraceReader, type StorageDb } from '@ariadne/storage';
 import { Inject, Injectable, Module, type OnApplicationShutdown } from '@nestjs/common';
+import type { Pool } from 'pg';
 import { API_CONFIG, type ApiConfig } from '../config/api-config';
 
 export const TRACE_READER = Symbol('TRACE_READER');
+export const INSIGHT_STORE = Symbol('INSIGHT_STORE');
+const STORAGE_HANDLE = Symbol('STORAGE_HANDLE');
+
+interface StorageHandle {
+  readonly db: StorageDb;
+  readonly pool: Pool;
+}
 
 @Injectable()
 class ReaderLifecycle implements OnApplicationShutdown {
@@ -16,16 +24,26 @@ class ReaderLifecycle implements OnApplicationShutdown {
 @Module({
   providers: [
     {
-      provide: TRACE_READER,
-      useFactory: (config: ApiConfig): TraceReader => {
-        // SELECT-only role: even an injection bug in the read path cannot write (B2/B3).
-        const { db, pool } = createStorageDb({ url: config.databaseUrl, ssl: config.dbSsl });
-        return new TraceReader(db, pool);
-      },
+      provide: STORAGE_HANDLE,
+      useFactory: (config: ApiConfig): StorageHandle =>
+        // The reader role can SELECT trace data but never write it; its only
+        // writable table is insights (B2/B3) — see migration 0003.
+        createStorageDb({ url: config.databaseUrl, ssl: config.dbSsl }),
       inject: [API_CONFIG],
+    },
+    {
+      provide: TRACE_READER,
+      useFactory: (storage: StorageHandle): TraceReader =>
+        new TraceReader(storage.db, storage.pool),
+      inject: [STORAGE_HANDLE],
+    },
+    {
+      provide: INSIGHT_STORE,
+      useFactory: (storage: StorageHandle): InsightStore => new InsightStore(storage.db),
+      inject: [STORAGE_HANDLE],
     },
     ReaderLifecycle,
   ],
-  exports: [TRACE_READER],
+  exports: [TRACE_READER, INSIGHT_STORE],
 })
 export class ApiStorageModule {}

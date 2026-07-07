@@ -2,8 +2,10 @@ import type { TenantId } from '@ariadne/protocol';
 import {
   buildTraceDag,
   detectAnomalies,
+  diffBusinessFlows,
   discoverBusinessFlows,
   type AnomaliesResponse,
+  type FlowsChangesResponse,
   type FlowsResponse,
   type FlowTraceInput,
 } from '@ariadne/graph';
@@ -16,6 +18,15 @@ import { TopologyService } from '../topology/topology.service';
 export interface FlowsQuery {
   readonly sampleSize: number;
   readonly status?: 'ok' | 'error' | undefined;
+  /** Optional sampling window — used by flow-change detection. */
+  readonly from?: Date | undefined;
+  readonly to?: Date | undefined;
+}
+
+export interface FlowChangesQuery {
+  readonly sampleSize: number;
+  /** Width of each comparison window; head = last N hours, base = the N hours before. */
+  readonly windowHours: number;
 }
 
 /**
@@ -33,6 +44,8 @@ export class FlowsService {
     const rows = await this.reader.listTraces(tenantId, {
       limit: query.sampleSize,
       ...(query.status !== undefined ? { hasError: query.status === 'error' } : {}),
+      ...(query.from !== undefined ? { from: query.from } : {}),
+      ...(query.to !== undefined ? { to: query.to } : {}),
     });
     const inputs: FlowTraceInput[] = [];
     for (const row of rows.slice(0, query.sampleSize)) {
@@ -46,6 +59,37 @@ export class FlowsService {
       });
     }
     return { sampledTraces: inputs.length, flows: discoverBusinessFlows(inputs) };
+  }
+
+  /**
+   * Business-flow drift: what appeared, disappeared or changed behaviour
+   * between the previous window and the current one. This is the product's
+   * "the checkout flow lost its payment hop after the 14:00 deploy" answer.
+   */
+  async changes(tenantId: TenantId, query: FlowChangesQuery): Promise<FlowsChangesResponse> {
+    const now = Date.now();
+    const windowMs = query.windowHours * 3_600_000;
+    const headWindow = { from: new Date(now - windowMs), to: new Date(now) };
+    const baseWindow = { from: new Date(now - 2 * windowMs), to: new Date(now - windowMs) };
+    const [base, head] = await Promise.all([
+      this.flows(tenantId, { sampleSize: query.sampleSize, ...baseWindow }),
+      this.flows(tenantId, { sampleSize: query.sampleSize, ...headWindow }),
+    ]);
+    const diff = diffBusinessFlows(base.flows, head.flows);
+    return {
+      base: {
+        from: baseWindow.from.toISOString(),
+        to: baseWindow.to.toISOString(),
+        sampledTraces: base.sampledTraces,
+      },
+      head: {
+        from: headWindow.from.toISOString(),
+        to: headWindow.to.toISOString(),
+        sampledTraces: head.sampledTraces,
+      },
+      changes: diff.changes,
+      unchangedCount: diff.unchangedCount,
+    };
   }
 
   async anomalies(tenantId: TenantId, query: FlowsQuery): Promise<AnomaliesResponse> {

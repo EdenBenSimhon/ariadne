@@ -1,8 +1,12 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { anomaliesUrl, flowsUrl } from '../../core/api/api-urls';
-import type { AnomaliesResponse, FlowsResponse } from '../../core/api/api.types';
+import { anomaliesUrl, flowChangesUrl, flowsUrl } from '../../core/api/api-urls';
+import type {
+  AnomaliesResponse,
+  FlowsChangesResponse,
+  FlowsResponse,
+} from '../../core/api/api.types';
 import { formatDuration, shortId } from '../../shared/format';
 import { serviceColor } from '../../shared/service-color';
 
@@ -18,11 +22,21 @@ import { serviceColor } from '../../shared/service-color';
   styleUrl: './flows-page.scss',
 })
 export class FlowsPage {
+  readonly changeWindowHours = signal(24);
+
   readonly flows = httpResource<FlowsResponse>(() => flowsUrl());
   readonly anomalies = httpResource<AnomaliesResponse>(() => anomaliesUrl());
+  readonly flowChanges = httpResource<FlowsChangesResponse>(() =>
+    flowChangesUrl(this.changeWindowHours())
+  );
 
   protected readonly flowItems = computed(() => this.flows.value()?.flows ?? []);
   protected readonly anomalyItems = computed(() => this.anomalies.value()?.anomalies ?? []);
+  protected readonly changeItems = computed(() => this.flowChanges.value()?.changes ?? []);
+
+  setChangeWindow(value: string): void {
+    this.changeWindowHours.set(Number(value) || 24);
+  }
 
   protected readonly formatDuration = formatDuration;
   protected readonly shortId = shortId;

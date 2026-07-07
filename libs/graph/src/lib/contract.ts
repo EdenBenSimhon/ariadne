@@ -40,6 +40,57 @@ export interface AnomaliesResponse {
   readonly anomalies: readonly import('./anomalies').Anomaly[];
 }
 
+/** `/api/flows/changes` — business-flow drift between two time windows. */
+export interface FlowsChangesResponse {
+  readonly base: { readonly from: string; readonly to: string; readonly sampledTraces: number };
+  readonly head: { readonly from: string; readonly to: string; readonly sampledTraces: number };
+  readonly changes: readonly import('./diff-flows').FlowChange[];
+  readonly unchangedCount: number;
+}
+
+/** `/api/spans` — one log line in the logger-style search view. */
+export interface SpanLogEntry {
+  readonly traceId: TraceId;
+  readonly spanId: string;
+  readonly serviceName: string;
+  readonly spanKind: string;
+  readonly transport: string;
+  readonly channel: string;
+  readonly operationName: string;
+  /** ISO timestamp on the wire. */
+  readonly startTime: string;
+  readonly durationMs: number;
+  readonly status: 'OK' | 'ERROR';
+  readonly error: string | null;
+  readonly metadata: Readonly<Record<string, string | number | boolean | null>> | null;
+}
+
+/** `/api/services` — per-service aggregate for the queried window. */
+export interface ServiceSummary {
+  readonly serviceName: string;
+  readonly spanCount: number;
+  readonly errorCount: number;
+  readonly errorRate: number;
+  readonly avgDurationMs: number | null;
+  readonly p95DurationMs: number | null;
+  readonly channels: readonly string[];
+}
+
+/** `/api/insights` — persisted agent/user conclusions about the trace data. */
+export interface Insight {
+  readonly insightId: string;
+  readonly kind: string;
+  readonly title: string;
+  readonly body: string;
+  readonly traceIds: readonly string[];
+  readonly createdBy: string;
+  readonly createdAt: string;
+}
+
+export interface InsightsResponse {
+  readonly items: readonly Insight[];
+}
+
 export interface StatsSummary {
   readonly traceCount: number;
   readonly errorTraceCount: number;

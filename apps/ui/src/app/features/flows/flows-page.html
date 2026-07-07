@@ -1,3 +1,33 @@
+<section class="changes panel">
+  <div class="changes-head">
+    <h3>Flow changes</h3>
+    <select [value]="changeWindowHours()" (change)="setChangeWindow($any($event.target).value)">
+      <option [value]="1">1h vs previous 1h</option>
+      <option [value]="6">6h vs previous 6h</option>
+      <option [value]="24">24h vs previous 24h</option>
+      <option [value]="168">7d vs previous 7d</option>
+    </select>
+  </div>
+  @if (flowChanges.isLoading()) {
+    <div class="dim quiet">comparing windows…</div>
+  } @else if (flowChanges.error()) {
+    <div class="dim quiet">flow comparison unavailable</div>
+  } @else if (changeItems().length === 0) {
+    <div class="dim quiet">
+      no drift — {{ flowChanges.value()?.unchangedCount ?? 0 }} flows behave the same as in the
+      previous window
+    </div>
+  } @else {
+    @for (change of changeItems(); track change.signature + change.kind) {
+      <div class="change">
+        <span class="kind-badge" [attr.data-kind]="change.kind">{{ change.kind }}</span>
+        <span class="mono signature">{{ change.signature }}</span>
+        <span class="dim reasons">{{ change.reasons.join('; ') }}</span>
+      </div>
+    }
+  }
+</section>
+
 @if (anomalyItems().length > 0) {
   <section class="anomalies panel">
     <h3>Anomalies</h3>

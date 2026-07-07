@@ -8,6 +8,8 @@
   --accent: #58a6ff;
   --error: #f85149;
   --ok: #3fb950;
+  --warn: #d29922;
+  --hover: rgba(88, 166, 255, 0.06);
   --svc-0: #58a6ff;
   --svc-1: #3fb950;
   --svc-2: #d29922;
@@ -103,9 +105,12 @@ a {
   border-radius: 6px;
   padding: 5px 12px;
   cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, background 0.15s;
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
+    background: var(--hover);
   }
 
   &:disabled {
@@ -114,17 +119,36 @@ a {
   }
 }
 
-input[type='text'] {
+input[type='text'],
+select {
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 5px 10px;
+  font: inherit;
+  transition: border-color 0.15s;
 
   &:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
   }
+}
+
+select {
+  cursor: pointer;
+}
+
+::placeholder {
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+/* Subtle scrollbars that match the theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .state-note {

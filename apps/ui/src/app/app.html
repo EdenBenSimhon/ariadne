@@ -1,12 +1,19 @@
 <header class="topbar">
-  <span class="brand">EventTracer</span>
+  <span class="brand">
+    <span class="mark"></span>
+    <span class="name">EventTracer</span>
+    <span class="tagline dim">business-flow tracing</span>
+  </span>
   <nav>
     <a routerLink="/traces" routerLinkActive="active">Traces</a>
+    <a routerLink="/logs" routerLinkActive="active">Logs</a>
     <a routerLink="/live" routerLinkActive="active">Live</a>
     <a routerLink="/flows" routerLinkActive="active">Flows</a>
     <a routerLink="/topology" routerLinkActive="active">Topology</a>
+    <a routerLink="/insights" routerLinkActive="active">Insights</a>
     <a routerLink="/ask" routerLinkActive="active">Ask</a>
   </nav>
+  <span class="tenant mono">acme</span>
 </header>
 <main>
   <router-outlet></router-outlet>

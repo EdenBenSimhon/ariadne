@@ -1,0 +1,47 @@
+<header class="head">
+  <h2>Insights</h2>
+  <p class="dim">
+    Conclusions the agent (and your team) saved about this system — flow changes, error
+    patterns and anomalies, each backed by traces.
+  </p>
+</header>
+
+@if (insights.isLoading()) {
+  <div class="state-note">loading insights…</div>
+} @else if (insights.error()) {
+  <div class="state-note">failed to load insights — is the API running?</div>
+} @else if (items().length === 0) {
+  <div class="state-note">
+    nothing saved yet — ask the agent something on the <a routerLink="/ask">Ask</a> page and it
+    will persist what it concludes
+  </div>
+} @else {
+  <ul class="cards">
+    @for (insight of items(); track insight.insightId) {
+      <li class="panel card">
+        <div class="card-head">
+          <span class="kind" [attr.data-kind]="insight.kind">{{ insight.kind }}</span>
+          <span class="title">{{ insight.title }}</span>
+          <span class="spacer"></span>
+          <span class="dim by">{{ insight.createdBy }} · {{ formatTime(insight.createdAt) }}</span>
+          <button
+            class="btn small"
+            [disabled]="deleting() === insight.insightId"
+            (click)="remove(insight.insightId)"
+          >
+            delete
+          </button>
+        </div>
+        <p class="body">{{ insight.body }}</p>
+        @if (insight.traceIds.length > 0) {
+          <div class="traces">
+            evidence:
+            @for (traceId of insight.traceIds; track traceId) {
+              <a class="mono chip" [routerLink]="['/traces', traceId]">{{ shortId(traceId) }}</a>
+            }
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}

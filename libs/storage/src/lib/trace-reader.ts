@@ -6,12 +6,13 @@ import type {
   TraceId,
   TransportKind,
 } from '@ariadne/protocol';
-import { and, asc, desc, eq, gte, lt, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, lt, lte, or, sql, type SQL } from 'drizzle-orm';
 import type { Pool } from 'pg';
 import type { StorageDb } from './db';
 import { spans } from './schema/spans';
 import { traces } from './schema/traces';
 import type { StoredSpan } from './span-row';
+import { escapeLike, type ServiceSummaryRow, type SpanSearchFilter } from './span-search';
 import type { StoredTrace } from './trace-row';
 
 export interface TraceListFilter {
@@ -146,6 +147,81 @@ export class TraceReader {
         )
       )
       .limit(window.maxRows + 1);
+  }
+
+  /**
+   * Log-style search over raw spans, newest first with keyset pagination.
+   * The window is mandatory (partition pruning via spans_time_idx); free text
+   * is matched literally (LIKE metacharacters escaped) over operation,
+   * channel and error.
+   */
+  async searchSpans(tenantId: TenantId, filter: SpanSearchFilter): Promise<StoredSpan[]> {
+    const conditions: SQL[] = [
+      eq(spans.tenantId, tenantId),
+      gte(spans.startTime, filter.from),
+      lte(spans.startTime, filter.to),
+    ];
+    if (filter.service !== undefined) conditions.push(eq(spans.serviceName, filter.service));
+    if (filter.channel !== undefined) conditions.push(eq(spans.channel, filter.channel));
+    if (filter.status !== undefined) conditions.push(eq(spans.status, filter.status));
+    if (filter.transport !== undefined) conditions.push(eq(spans.transport, filter.transport));
+    if (filter.spanKind !== undefined) conditions.push(eq(spans.spanKind, filter.spanKind));
+    if (filter.minDurationMs !== undefined) {
+      conditions.push(gte(spans.durationMs, filter.minDurationMs));
+    }
+    if (filter.q !== undefined && filter.q.length > 0) {
+      const pattern = `%${escapeLike(filter.q)}%`;
+      const textMatch = or(
+        ilike(spans.operationName, pattern),
+        ilike(spans.channel, pattern),
+        ilike(spans.error, pattern)
+      );
+      if (textMatch !== undefined) conditions.push(textMatch);
+    }
+    if (filter.metaKey !== undefined) {
+      conditions.push(
+        filter.metaValue !== undefined
+          ? sql`${spans.metadata} ->> ${filter.metaKey} = ${filter.metaValue}`
+          : sql`${spans.metadata} ? ${filter.metaKey}`
+      );
+    }
+    if (filter.cursor !== undefined) {
+      const cursorPredicate = or(
+        lt(spans.startTime, filter.cursor.startTime),
+        and(eq(spans.startTime, filter.cursor.startTime), lt(spans.spanId, filter.cursor.spanId))
+      );
+      if (cursorPredicate !== undefined) conditions.push(cursorPredicate);
+    }
+    return this.db
+      .select()
+      .from(spans)
+      .where(and(...conditions))
+      .orderBy(desc(spans.startTime), desc(spans.spanId))
+      .limit(filter.limit + 1);
+  }
+
+  /** Per-service aggregates for the window — filter dropdowns + agent service analysis. */
+  async listServiceSummaries(tenantId: TenantId, window: TimeWindow): Promise<ServiceSummaryRow[]> {
+    const rows = await this.db
+      .select({
+        serviceName: spans.serviceName,
+        spanCount: sql<number>`count(*)`.mapWith(Number),
+        errorCount: sql<number>`count(*) filter (where ${spans.status} = 'ERROR')`.mapWith(Number),
+        avgDurationMs: sql<number | null>`avg(${spans.durationMs})`.mapWith(toNullableNumber),
+        p95DurationMs: sql<number | null>`percentile_cont(0.95) within group (order by ${spans.durationMs})`.mapWith(toNullableNumber),
+        channels: sql<string[]>`array_agg(distinct ${spans.channel})`,
+      })
+      .from(spans)
+      .where(
+        and(
+          eq(spans.tenantId, tenantId),
+          gte(spans.startTime, window.from),
+          lte(spans.startTime, window.to)
+        )
+      )
+      .groupBy(spans.serviceName)
+      .orderBy(desc(sql`count(*)`));
+    return rows.map((row) => ({ ...row, channels: row.channels ?? [] }));
   }
 
   async getStats(tenantId: TenantId, window: TimeWindow): Promise<StatsRow> {
