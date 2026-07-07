@@ -20,6 +20,7 @@ function toTopologySpan(row: TopologySpanRow): TopologySpan {
     durationMs: row.durationMs,
     status: row.status,
     error: row.error,
+    metadata: null,
   };
 }
 

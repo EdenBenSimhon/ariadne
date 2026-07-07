@@ -38,6 +38,11 @@
       height: 14px;
       border-radius: 3px;
       opacity: 0.9;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
     }
 
     .dur {
@@ -67,4 +72,77 @@
   border-radius: 50%;
   flex-shrink: 0;
   margin-left: 8px;
+}
+
+.msg-tip {
+  position: fixed;
+  z-index: 50;
+  max-width: 340px;
+  padding: 10px 12px;
+  background: var(--panel, #1b1d23);
+  border: 1px solid var(--border, #333);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  font-size: 12px;
+
+  .tip-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .dot {
+      margin-left: 0;
+    }
+
+    .svc {
+      font-weight: 600;
+    }
+  }
+
+  .tip-sub {
+    margin-top: 2px;
+    font-size: 11px;
+  }
+
+  .tip-error {
+    margin-top: 4px;
+    color: var(--error);
+    font-size: 11px;
+  }
+
+  .tip-msg-label {
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10px;
+  }
+
+  .tip-msg {
+    margin-top: 4px;
+    border-collapse: collapse;
+    width: 100%;
+
+    td {
+      padding: 1px 0;
+      vertical-align: top;
+    }
+
+    .k {
+      color: var(--text-dim);
+      padding-right: 10px;
+      white-space: nowrap;
+    }
+
+    .v {
+      font-size: 11px;
+      word-break: break-all;
+    }
+  }
+
+  .tip-empty {
+    margin-top: 4px;
+    font-size: 11px;
+    font-style: italic;
+  }
 }

@@ -23,10 +23,41 @@
           [style.left.%]="row.leftPct"
           [style.width.%]="row.widthPct"
           [style.background]="serviceColor(row.node.serviceName)"
-          [title]="tooltip(row)"
+          (mouseenter)="showTip(row, $event)"
+          (mousemove)="moveTip($event)"
+          (mouseleave)="hideTip()"
         ></div>
         <span class="dur mono dim">{{ formatDuration(row.node.durationMs) }}</span>
       </div>
+    </div>
+  }
+
+  @if (hover(); as h) {
+    <div class="msg-tip" [style.left.px]="h.x + 14" [style.top.px]="h.y + 14">
+      <div class="tip-head">
+        <span class="dot" [style.background]="serviceColor(h.row.node.serviceName)"></span>
+        <span class="svc">{{ h.row.node.serviceName }}</span>
+        <span class="dim">{{ h.row.node.spanKind }}</span>
+      </div>
+      <div class="tip-sub dim">
+        {{ h.row.node.channel }} · {{ formatDuration(h.row.node.durationMs) }}
+      </div>
+      @if (h.row.node.error !== null) {
+        <div class="tip-error">{{ h.row.node.error }}</div>
+      }
+      <div class="tip-msg-label dim">Message</div>
+      @if (metaEntries(h.row.node.metadata).length > 0) {
+        <table class="tip-msg">
+          @for (entry of metaEntries(h.row.node.metadata); track entry[0]) {
+            <tr>
+              <td class="k">{{ entry[0] }}</td>
+              <td class="v mono">{{ entry[1] }}</td>
+            </tr>
+          }
+        </table>
+      } @else {
+        <div class="tip-empty dim">no captured payload</div>
+      }
     </div>
   }
 </div>

@@ -1,4 +1,5 @@
 import type {
+  Metadata,
   SpanId,
   SpanKind,
   SpanStatus,
@@ -26,6 +27,8 @@ export interface GraphSpan {
   readonly durationMs: number;
   readonly status: SpanStatus;
   readonly error: string | null;
+  /** Allowlist-redacted message fields captured at source (flat primitives). */
+  readonly metadata: Metadata | null;
 }
 
 /** Topology aggregates across traces, so its input also carries the traceId. */
@@ -51,6 +54,8 @@ export interface TraceDagNode {
   readonly depth: number;
   /** parentSpanId is set but the parent never arrived (partial trace). */
   readonly orphaned: boolean;
+  /** Allowlist-redacted message fields captured at source (flat primitives). */
+  readonly metadata: Metadata | null;
 }
 
 /**

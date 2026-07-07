@@ -25,6 +25,7 @@ export function span(
     durationMs: 50,
     status: 'OK',
     error: null,
+    metadata: null,
     ...overrides,
   };
 }

@@ -43,6 +43,7 @@ export function storedSpanToGraphSpan(row: StoredSpan): GraphSpan {
     durationMs: row.durationMs,
     status: row.status,
     error: row.error,
+    metadata: row.metadata ?? null,
   };
 }
 

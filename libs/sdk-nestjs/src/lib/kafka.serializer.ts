@@ -22,6 +22,23 @@ function toKafkaMessage(value: unknown): KafkaMessageLike {
 }
 
 /**
+ * Producers commonly emit `value: JSON.stringify(event)`, so the payload
+ * reaching the serializer is a string. Parse it (best-effort) before
+ * redaction so PRODUCER spans capture the same allowlisted message fields as
+ * CONSUMER spans do.
+ */
+function payloadForRedaction(value: unknown): unknown {
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
+/**
  * Zero-touch producer hook for apps using Nest's ClientKafka: registration is
  * config-only (`serializer` in the ClientsModule options), business emit()
  * calls stay untouched (spec §6). Injects dual trace headers and emits the
@@ -50,7 +67,10 @@ export class EventTracerKafkaSerializer implements Serializer<unknown, KafkaMess
         transport: 'kafka',
         channel,
         operationName: `publish ${channel}`,
-        metadata: redactMetadata(message.value, this.runtime.redactionAllowlist),
+        metadata: redactMetadata(
+          payloadForRedaction(message.value),
+          this.runtime.redactionAllowlist
+        ),
       },
       this.runtime.clock
     );
