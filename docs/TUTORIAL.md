@@ -6,6 +6,23 @@ This walks you from an empty machine to seeing a connected multi-service trace i
 
 ---
 
+## 0. Fastest path — scripts
+
+If you just want it running, the `scripts/` wrappers do the steps below for you
+(each loads Node 22 first). See `docs/RUNBOOK.md` for the full reference.
+
+```bash
+./scripts/verify.sh    # no Docker: build + test all + MCP flow-recognition demo
+./scripts/demo.sh      # just the MCP demo + stdio probe
+./scripts/up.sh        # needs Docker: infra + migrate + all services + one smoke order
+./scripts/down.sh      # stop the up.sh stack
+```
+
+The rest of this tutorial spells out those steps and then shows how to instrument
+your own service.
+
+---
+
 ## 1. Prerequisites
 
 - **Node 22** (`nvm use 22` — Node 18 is too old for Angular 21)

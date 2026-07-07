@@ -119,6 +119,10 @@ proves the same through the NestJS module.
 
 ## Commands
 
+See `docs/RUNBOOK.md` for the full run guide; the `scripts/` wrappers cover the
+common paths (`./scripts/verify.sh`, `./scripts/demo.sh`, `./scripts/up.sh`,
+`./scripts/down.sh`). Underlying Nx commands:
+
 ```bash
 nvm use 22                                   # Node 18 is too old for Angular 21
 npx nx run-many -t lint,test,build --all     # the full gate

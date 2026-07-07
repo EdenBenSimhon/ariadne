@@ -53,6 +53,17 @@ npm install ... --cache=/tmp/ariadne-npm-cache
 
 ## Common commands
 
+**One-command scripts (`scripts/`)** — each loads Node 22 first:
+
+```bash
+./scripts/verify.sh    # Path A (no Docker): build + test all + MCP demos
+./scripts/demo.sh      # just the MCP flow-recognition demo + stdio probe
+./scripts/up.sh        # Path B (Docker): infra + migrate + services + smoke order
+./scripts/down.sh      # tear the Path B stack back down
+```
+
+See `docs/RUNBOOK.md` for the full run guide. Underlying Nx commands:
+
 ```bash
 # Build all projects
 npx nx run-many --target=build --all
