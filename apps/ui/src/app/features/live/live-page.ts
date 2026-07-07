@@ -32,9 +32,13 @@ export class LivePage {
   protected readonly errorsOnly = signal(false);
   protected readonly lastBeat = signal<string | null>(null);
 
-  protected readonly visible = computed(() =>
-    this.errorsOnly() ? this.events().filter((event) => event.trace.hasError) : this.events()
-  );
+  protected readonly visible = computed(() => {
+    const list = this.errorsOnly()
+      ? this.events().filter((event) => event.trace.hasError)
+      : this.events();
+    // Newest first, regardless of SSE arrival / backfill order.
+    return [...list].sort((a, b) => b.at.localeCompare(a.at));
+  });
   protected readonly total = computed(() => this.events().length);
   protected readonly errorCount = computed(() => this.events().filter((event) => event.trace.hasError).length);
 
