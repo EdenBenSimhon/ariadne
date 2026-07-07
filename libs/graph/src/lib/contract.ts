@@ -53,3 +53,31 @@ export interface StatsSummary {
   readonly from: string;
   readonly to: string;
 }
+
+/**
+ * Live activity (SSE `/api/events`, snapshot `/api/events/recent`, MCP
+ * `get_recent_activity`). Distilled by construction — a completed trace's
+ * summary, never raw spans or payloads — so the same event is safe for the UI,
+ * an SSE client and the LLM alike (security B4).
+ */
+export type LiveEventKind = 'trace' | 'heartbeat';
+
+export interface TraceLiveEvent {
+  readonly kind: 'trace';
+  /** ISO time the event was observed/replayed. */
+  readonly at: string;
+  readonly trace: TraceSummary;
+}
+
+/** Keepalive so proxies don't drop an idle SSE connection. */
+export interface HeartbeatLiveEvent {
+  readonly kind: 'heartbeat';
+  readonly at: string;
+}
+
+export type LiveEvent = TraceLiveEvent | HeartbeatLiveEvent;
+
+/** Non-streaming recent activity — the "what just happened / any errors?" log. */
+export interface RecentActivityResponse {
+  readonly events: readonly TraceLiveEvent[];
+}

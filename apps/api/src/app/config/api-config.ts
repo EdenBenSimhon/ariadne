@@ -11,6 +11,10 @@ const apiConfigSchema = z.object({
   topologyMaxRows: z.number().int().min(1),
   defaultLookbackHours: z.number().int().min(1),
   maxWindowDays: z.number().int().min(1),
+  /** How often the live-events poller checks for new traces (ms). */
+  liveStreamPollMs: z.number().int().min(200).max(60_000),
+  /** Traces the poller scans per tick / default SSE backfill size. */
+  liveStreamBackfill: z.number().int().min(1).max(500),
   port: z.number().int().min(0).max(65_535),
 });
 
@@ -41,6 +45,8 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     topologyMaxRows: intFromEnv(env['API_TOPOLOGY_MAX_ROWS'], 50_000),
     defaultLookbackHours: intFromEnv(env['API_DEFAULT_LOOKBACK_HOURS'], 24),
     maxWindowDays: intFromEnv(env['API_MAX_WINDOW_DAYS'], 31),
+    liveStreamPollMs: intFromEnv(env['API_LIVE_POLL_MS'], 1_000),
+    liveStreamBackfill: intFromEnv(env['API_LIVE_BACKFILL'], 25),
     port: intFromEnv(env['PORT'], 3000),
   });
 }

@@ -34,3 +34,21 @@ export function anomaliesUrl(sampleSize = 50): string {
 export function statsUrl(): string {
   return '/api/stats';
 }
+
+export interface LiveStreamParams {
+  /** EventSource can't set headers, so the tenant travels in the query. */
+  readonly tenantId: string;
+  readonly backfill?: number;
+  readonly types?: string;
+}
+
+export function eventsUrl(params: LiveStreamParams): string {
+  const search = new URLSearchParams({ tenantId: params.tenantId });
+  if (params.backfill !== undefined) search.set('backfill', String(params.backfill));
+  if (params.types) search.set('types', params.types);
+  return `/api/events?${search.toString()}`;
+}
+
+export function recentActivityUrl(limit = 25): string {
+  return `/api/events/recent?limit=${limit}`;
+}

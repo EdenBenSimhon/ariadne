@@ -1,0 +1,13 @@
+{
+  "//": "Rename this file to .mcp.json to let Claude Code auto-connect the EventTracer MCP server from this repo. Build it first: npx nx build mcp. The API (Path B) must be running for live data.",
+  "mcpServers": {
+    "eventtracer": {
+      "command": "node",
+      "args": ["dist/apps/mcp/main.js"],
+      "env": {
+        "MCP_API_URL": "http://localhost:3000/api",
+        "MCP_TENANT_ID": "acme"
+      }
+    }
+  }
+}

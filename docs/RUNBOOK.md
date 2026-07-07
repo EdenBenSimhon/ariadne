@@ -82,11 +82,25 @@ curl -s -H 'x-tenant-id: acme' localhost:3000/api/traces | python3 -m json.tool
 
 ## Wire the MCP server into Claude (needs the API from Path B)
 
-The six tools — `discover_business_flows`, `find_anomalies`, `get_trace_flow`,
-`get_topology`, `list_traces`, `get_stats` — are served over stdio:
+**One-click (Claude Code):** `cp .mcp.json.example .mcp.json` in the repo root,
+then `npx nx build mcp`. Claude Code auto-connects the `eventtracer` server on
+its next start. The server ships `instructions` that tell the agent which tool
+to reach for, so it's usable without any extra prompting.
+
+The seven read-only, tenant-scoped tools:
+
+| Tool | Answers |
+|---|---|
+| `discover_business_flows` | "What business processes actually run here?" |
+| `find_anomalies` | "What's broken and where?" (hotspots, cycles, slow hops, failing flows) |
+| `get_recent_activity` | "What just happened / anything failing right now?" — the recent **logs** |
+| `get_trace_flow` | one trace as hops + critical path + sanitized errors |
+| `get_topology` | who talks to whom, over which channels |
+| `list_traces`, `get_stats` | recent traces + tenant-wide health |
+
+Manual config (Claude Code / Desktop) if you'd rather not use the example file:
 
 ```jsonc
-// Claude Code / Desktop MCP config
 {
   "mcpServers": {
     "eventtracer": {
@@ -98,8 +112,9 @@ The six tools — `discover_business_flows`, `find_anomalies`, `get_trace_flow`,
 }
 ```
 
-Example prompt: *"Discover the business flows in my system, name them, and tell me
-which one is failing most and where in the chain it breaks."*
+Example prompt: *"Discover the business flows in my system, name them, tell me
+which is failing most and where it breaks, and show me any errors in the recent
+activity."*
 
 ---
 
@@ -108,7 +123,8 @@ which one is failing most and where in the chain it breaks."*
 | Service | Port | Endpoint |
 |---|---|---|
 | UI | 4200 | http://localhost:4200 |
-| API | 3000 | `/api/traces`, `/api/topology`, `/api/stats`, `/api/flows`, `/api/anomalies`, `/api/healthz` |
+| API | 3000 | `/api/traces`, `/topology`, `/stats`, `/flows`, `/anomalies`, `/events` (SSE), `/events/recent`, `/healthz` |
+| UI **Live** tab | 4200 | http://localhost:4200/live — realtime SSE feed |
 | Collector | 3001 | `/healthz` (kafka/db status + ingestion counters) |
 | demo-mesh (order-service) | 4001 | `POST /orders` |
 | Kafka | 9092 | broker (KRaft) |

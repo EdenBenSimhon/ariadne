@@ -296,9 +296,14 @@ Tools exposed (all read-only, tenant-scoped):
 |---|---|
 | `discover_business_flows` | *"What business processes actually run here?"* — clusters recent traces by their service/channel hop signature: each distinct flow with frequency, error rate, avg duration |
 | `find_anomalies` | *"What's wrong?"* — service cycles, error-hotspot hops, latency-dominant hops, failing flows, ordered by severity |
+| `get_recent_activity` | *"What just happened / anything failing right now?"* — the recent activity **log**: last N traces with status, service, duration (same feed as the UI **Live** tab) |
 | `get_trace_flow` | one trace as hops + critical path + sanitized errors (no spans, no metadata) |
 | `get_topology` | who talks to whom, over which channels, with weights and loops |
 | `list_traces`, `get_stats` | recent traces and tenant-wide health numbers |
+
+**One-click connect:** `cp .mcp.json.example .mcp.json` in the repo root, then
+`npx nx build mcp` — Claude Code auto-connects the server, and its built-in
+`instructions` steer the agent to the right tool.
 
 **The UI and the AI see the same picture:** `discover_business_flows` and `find_anomalies` are served by the same `/api/flows` and `/api/anomalies` endpoints that power the UI's **Flows** tab — one implementation in `libs/graph`, three consumers (API, UI, MCP).
 

@@ -38,7 +38,8 @@ npx nx serve api                  # REST API on :3000
 npx nx serve demo-mesh            # order-service :4001 — zero tracing code
 
 curl -s -X POST localhost:4001/orders -H 'content-type: application/json' -d '{"orderId":"ord-42"}'
-# wait ~2s, then open the UI at http://localhost:4200
+# wait ~2s, then open the UI at http://localhost:4200 — the Live tab (/live) streams
+# new traces in realtime over SSE (GET /api/events); MCP get_recent_activity reads the same feed
 
 # or seed the worked example straight into _tracing (needs only Postgres + collector):
 node tools/smoke/seed-tracing.mjs

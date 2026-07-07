@@ -34,7 +34,9 @@ const waitFor = (id) =>
 
 (async () => {
   send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'probe', version: '0' } } });
-  await waitFor(1);
+  const init = await waitFor(1);
+  console.log('\n✓ initialize: server', JSON.stringify(init.result.serverInfo),
+    '\n  instructions:', init.result.instructions ? `present (${init.result.instructions.length} chars)` : 'MISSING');
   send({ jsonrpc: '2.0', method: 'notifications/initialized' });
 
   send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });

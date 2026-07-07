@@ -1,0 +1,45 @@
+<section class="live">
+  <header class="head">
+    <div class="titles">
+      <h1>Live events</h1>
+      <p>Realtime trace activity over SSE — the same feed the MCP <code>get_recent_activity</code> tool reads.</p>
+    </div>
+    <div class="status" [attr.data-state]="status()">
+      <span class="dot"></span>{{ status() }}
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" (click)="togglePause()">{{ status() === 'paused' ? 'Resume' : 'Pause' }}</button>
+    <button type="button" (click)="clear()">Clear</button>
+    <label class="chk">
+      <input type="checkbox" [checked]="errorsOnly()" (change)="toggleErrorsOnly()" />
+      Errors only
+    </label>
+    <span class="counts">{{ total() }} events · <span class="err">{{ errorCount() }} errors</span></span>
+  </div>
+
+  @if (visible().length === 0) {
+    <p class="empty">
+      Waiting for activity… fire a request at the demo mesh
+      (<code>POST /orders</code>) or run <code>node tools/smoke/seed-tracing.mjs</code> and it appears here live.
+    </p>
+  } @else {
+    <ul class="feed">
+      @for (event of visible(); track event.trace.traceId + event.at) {
+        <li class="row" [class.error]="event.trace.hasError">
+          <span class="time">{{ formatTime(event.at) }}</span>
+          <span class="badge" [class.ok]="!event.trace.hasError" [class.bad]="event.trace.hasError">
+            {{ event.trace.hasError ? 'ERROR' : 'OK' }}
+          </span>
+          <span class="svc">
+            <span class="swatch" [style.background]="serviceColor(event.trace.rootService ?? 'unknown')"></span>
+            {{ event.trace.rootService ?? 'unknown' }}
+          </span>
+          <span class="meta">{{ event.trace.spanCount }} spans · {{ formatDuration(event.trace.durationMs) }}</span>
+          <a class="tid" [routerLink]="['/traces', event.trace.traceId]">{{ shortId(event.trace.traceId) }}</a>
+        </li>
+      }
+    </ul>
+  }
+</section>

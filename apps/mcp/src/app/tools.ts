@@ -3,6 +3,7 @@ import type {
   AnomaliesResponse,
   FlowsResponse,
   Paginated,
+  RecentActivityResponse,
   StatsSummary,
   TopologyGraph,
   TraceDetail,
@@ -122,6 +123,26 @@ export const mcpTools: readonly McpToolDef[] = [
     handler: async (client, args) => {
       const sampleSize = clampLimit(args['sampleSize'], 50, 100);
       return client.get<AnomaliesResponse>(`/anomalies?sampleSize=${sampleSize}`);
+    },
+  },
+  {
+    name: 'get_recent_activity',
+    description:
+      'Recent activity log: the last N completed traces (newest first) with root service, ' +
+      'status (ok/error), span count and duration — the "what just happened / anything failing ' +
+      'right now?" view. This is the same live feed the UI Live tab streams over SSE. Use it to ' +
+      'answer questions about current behaviour and recent failures. Distilled summaries only — ' +
+      'no raw spans or payloads.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'events to return (1-100, default 25)' },
+      },
+    },
+    handler: async (client, args) => {
+      const limit = clampLimit(args['limit'], 25, 100);
+      const activity = await client.get<RecentActivityResponse>(`/events/recent?limit=${limit}`);
+      return activity.events;
     },
   },
 ];

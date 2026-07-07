@@ -3,7 +3,7 @@
 Every phase from the spec (§12) with its concrete steps and where each landed.
 ✅ done · 🔜 deferred (documented seam) · ➖ out of MVP scope by design.
 
-**Verification:** `npx nx run-many -t lint,test,build --all` — 14 projects, 248 tests, all green (verified fresh with `--skip-nx-cache`, branch `dev`).
+**Verification:** `npx nx run-many -t lint,test,build --all` — 14 projects, 253 tests, all green (verified fresh with `--skip-nx-cache`, branch `dev`).
 
 ---
 
@@ -68,6 +68,7 @@ Every phase from the spec (§12) with its concrete steps and where each landed.
 - [x] Timeline: pure `computeTimelineRows` → indented Gantt bars (plain divs), orphan banner, axis ticks
 - [x] Flow: pure `layoutDag` → Angular-templated SVG DAG with bezier edges, error highlighting
 - [x] Topology: d3-force island (signal input → effect → untracked render, DestroyRef cleanup) — the only D3 in the app
+- [x] **Live** page: realtime trace feed over SSE (`/api/events`) — RxJS Observable at the EventSource boundary bridged into signals; pause/resume, clear, errors-only filter, connection-status pill
 - [x] Tenant interceptor, dev proxy `/api→:3000`, mock-API mode, dark dev-tool theme
 
 ## Phase 6 — More transports + security baseline ✅ core / 🔜 rest
@@ -85,10 +86,12 @@ Every phase from the spec (§12) with its concrete steps and where each landed.
 ## Phase 7 — Intelligence ✅ seeded  (`apps/mcp`)
 
 - [x] `computeFlowSignature` + `discoverBusinessFlows` (path-signature clustering — spec §11 "path variants")
-- [x] MCP stdio server: `discover_business_flows`, `get_trace_flow`, `get_topology`, `list_traces`, `get_stats`
+- [x] MCP stdio server, 7 tools: `discover_business_flows`, `get_trace_flow`, `get_topology`, `list_traces`, `get_stats`, `find_anomalies`, `get_recent_activity`
 - [x] B4: read-only tenant-scoped tools; raw spans/metadata never reach the model; error strings sanitized
 - [x] Anomaly flagging: `detectAnomalies` (cycles, error hotspots, latency-dominant hops, failing flows) — served by `/api/anomalies`, shown in the UI Flows tab, exposed as the MCP `find_anomalies` tool
 - [x] `/api/flows` + UI **Flows** page — the UI and the MCP agent consume the same distilled endpoints
+- [x] `get_recent_activity` (asks about the "logs" / recent behaviour) over `/api/events/recent` — same distilled feed as the UI **Live** tab
+- [x] Friendly connect: server `instructions` guide the agent's tool use; `.mcp.json.example` for one-click Claude Code registration
 - [ ] 🔜 living-documentation generation
 
 ## Phase 8 — Kubernetes + high scale ➖ (post-MVP by design)
