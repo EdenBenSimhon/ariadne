@@ -9,6 +9,7 @@ import { serviceColor } from '../../shared/service-color';
 
 type ConnStatus = 'connecting' | 'live' | 'paused' | 'error';
 const MAX_EVENTS = 300;
+const CLEARED_AT_KEY = 'live:clearedAt';
 
 /**
  * Realtime activity over SSE. The transport is an RxJS Observable
@@ -31,6 +32,13 @@ export class LivePage {
   protected readonly status = signal<ConnStatus>('connecting');
   protected readonly errorsOnly = signal(false);
   protected readonly lastBeat = signal<string | null>(null);
+
+  /**
+   * Watermark set by "Clear": events at/older than this are suppressed, so a
+   * clear survives a refresh (the SSE backfill would otherwise replay them).
+   * Persisted per-browser; new live events (later `at`) still come through.
+   */
+  private clearedAt: string | null = readClearedAt();
 
   protected readonly visible = computed(() => {
     const list = this.errorsOnly()
@@ -69,6 +77,7 @@ export class LivePage {
       if (this.status() !== 'paused') this.status.set('live');
       return;
     }
+    if (this.clearedAt !== null && message.at <= this.clearedAt) return;
     this.events.update((list) => [message, ...list].slice(0, MAX_EVENTS));
     if (this.status() !== 'paused') this.status.set('live');
   }
@@ -84,10 +93,34 @@ export class LivePage {
   }
 
   protected clear(): void {
+    // Watermark = newest event we currently hold (fallback to now), so the
+    // backfill can't bring these back after a refresh.
+    const newest = this.events().reduce<string | null>(
+      (max, event) => (max === null || event.at > max ? event.at : max),
+      null
+    );
+    this.clearedAt = newest ?? new Date().toISOString();
+    writeClearedAt(this.clearedAt);
     this.events.set([]);
   }
 
   protected toggleErrorsOnly(): void {
     this.errorsOnly.update((value) => !value);
+  }
+}
+
+function readClearedAt(): string | null {
+  try {
+    return localStorage.getItem(CLEARED_AT_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeClearedAt(at: string): void {
+  try {
+    localStorage.setItem(CLEARED_AT_KEY, at);
+  } catch {
+    // storage unavailable (private mode / quota) — clear stays session-only
   }
 }
